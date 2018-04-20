@@ -32,6 +32,12 @@ function createWindow () {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+
+  const { ipcMain } = require('electron')
+
+  ipcMain.on('resize-window', (event, arg) => {
+    mainWindow.setSize(arg.width, arg.height, false)
+  })
 }
 
 app.on('ready', createWindow)

@@ -23,28 +23,30 @@
 </template>
 
 <script>
-  const contacts = [
-    { id: 1, name: 'Leon', status: 'online', avatar: 'https://avatars1.githubusercontent.com/u/5290512?s=460&v=4' },
-    { id: 2, name: 'Jaxter', status: 'offline', avatar: 'https://avatars2.githubusercontent.com/u/3620463?s=460&v=4' }
-  ]
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'chat',
 
     methods: {
       selectContact (index) {
-        this.activeContact = contacts[index]
+        this.activeContact = this.allContacts[index]
       }
     },
+
     data () {
       if (this.activeContact == null) {
-        this.activeContact = contacts[0]
+        this.activeContact = this.$store.getters.allContacts[0]
       }
 
       return {
         activeContact: this.activeContact,
-        contacts: contacts
+        contacts: this.$store.getters.allContacts
       }
+    },
+
+    computed: {
+      ...mapGetters(['allContacts'])
     }
   }
 </script>
