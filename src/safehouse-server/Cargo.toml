@@ -1,0 +1,7 @@
+[package]
+name = "safehouse-server"
+version = "0.1.0"
+authors = ["Leon Hartley <dev@leonh.net>"]
+
+[dependencies]
+websocket = "0.20.2"
