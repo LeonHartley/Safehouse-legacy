@@ -3,8 +3,15 @@
         <div class="side-bar">
             <ul class="contacts">
 
-                <li v-for="(contact, index) in contacts" :key="index">
-                     <img :src="contact.avatar" :class="{ 'contact-img': true, 'status-online': contact.status == 'online', 'status-offline': contact.status == 'offline'}" v-on:click="selectContact(index)" />
+                <li v-for="(contact, index) in contacts" 
+                  :key="index" 
+                  v-on:click="selectContact(index)"
+                  :class="{'active': activeContact.id == contact.id}">
+                     <img :src="contact.avatar" :class="{
+                        'contact-img': true,
+                        'status-online': contact.status == 'online',
+                        'status-offline': contact.status == 'offline'
+                      }"/>
                 </li>
                 
             </ul>
@@ -12,7 +19,12 @@
 
         <div class="main">
             <div class="main-contact">
-                <img :src="activeContact.avatar" :class="{ 'contact-img': true, 'contact-img-large': true, 'status-online': activeContact.status == 'online', 'status-offline': activeContact.status == 'offline'}" />
+                <img :src="activeContact.avatar" :class="{
+                  'contact-img': true,
+                  'contact-img-large': true,
+                  'status-online': activeContact.status == 'online',
+                  'status-offline': activeContact.status == 'offline'
+                }" />
                 <span class="contact-name">{{ activeContact.name }}</span>
             </div>
             <div class="main-chat">
@@ -23,30 +35,20 @@
 </template>
 
 <script>
-  import { mapGetters } from 'vuex'
-
   export default {
     name: 'chat',
 
     methods: {
       selectContact (index) {
-        this.activeContact = this.allContacts[index]
+        this.activeContact = this.$store.state.User.contacts[index]
       }
     },
 
     data () {
-      if (this.activeContact == null) {
-        this.activeContact = this.$store.getters.allContacts[0]
-      }
-
       return {
-        activeContact: this.activeContact,
-        contacts: this.$store.getters.allContacts
+        activeContact: this.$store.state.User.contacts[0],
+        contacts: this.$store.state.User.contacts
       }
-    },
-
-    computed: {
-      ...mapGetters(['allContacts'])
     }
   }
 </script>
@@ -120,11 +122,12 @@
         padding: 10px 15px 15px 10px;
     }
 
-    .chat-message {
-
+    ul.contacts li:hover {
+      cursor: pointer;
+      background: #263543;
     }
 
-    .chat-message .chat-message-from {
-
+    ul.contacts li.active {
+      background: #263543;
     }
 </style>
