@@ -1,6 +1,18 @@
+#![feature(plugin)]
+#![plugin(rocket_codegen)]
+
+extern crate rocket;
+#[macro_use] extern crate rocket_contrib;
+
+use rocket_contrib::{Json, Value};
+
+#[get("/")]
+fn index() -> Json<Value> {
+    Json(json!({
+        "status": "online"
+    }))
+}
+
 fn main() {
-
-    println!("hi");
-
-
+    rocket::ignite().mount("/", routes![index]).launch();
 }
