@@ -1,4 +1,6 @@
 #[macro_use] extern crate nickel;
+extern crate hyper;
+extern crate rustc_serialize;
 
 use api::SafehouseApi;
 

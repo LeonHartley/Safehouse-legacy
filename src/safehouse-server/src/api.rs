@@ -1,4 +1,9 @@
-use nickel::{Nickel, HttpRouter};
+
+use nickel::{Nickel, JsonBody, HttpRouter, Request, Response, MiddlewareResult};
+use nickel::status::StatusCode::{self, Forbidden};
+use hyper::method::Method::{Options};
+
+use hyper::header::{Authorization, Bearer};
 
 pub struct SafehouseApi {
     host: &'static str,
@@ -27,8 +32,43 @@ impl SafehouseApi {
     }
 }
 
+#[derive(RustcDecodable, RustcEncodable)]
+struct AuthorisationRequest {
+    username: String,
+    password: String
+}
+
+fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
+    match req.origin.uri.to_string().as_ref() {
+        "/authorize" => res.next_middleware(),
+        _ => {
+            match &req.origin.method {
+                Options => res.next_middleware(),
+                _ => {
+                    let auth_header = match req.origin.headers.get::<Authorization<Bearer>>() {
+                        Some(header) => header,
+                        None => panic!("Failed to find authorization token")
+                    };
+        
+                    // check token..
+                    println!("{}", auth_header.token);
+
+                    res.error(Forbidden, "Access denied")
+                }
+            }
+        }
+    }
+}
+
 fn configure_routes(server: &mut Nickel) {
-    server.get("/test", middleware! { |req, res|
-        "yoo"
+    server.utilize(authorization_check);
+
+    server.post("/authorize", middleware! { |req, res |
+        let info = try_with!(res, {
+            req.json_as::<AuthorisationRequest>().map_err(|e| (StatusCode::BadRequest, e))
+        });
+
+        println!("username: {}, password {}", info.username, info.password);
+        format!("hi {}", info.username)
     });
 }

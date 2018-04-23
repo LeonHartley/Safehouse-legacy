@@ -7,3 +7,4 @@ authors = ["Leon Hartley <dev@leonh.net>"]
 websocket = "0.20.2"
 nickel = "0.10.1"
 rustc-serialize = "0.3"
+hyper = "*"
