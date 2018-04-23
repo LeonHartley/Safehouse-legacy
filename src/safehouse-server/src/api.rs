@@ -20,9 +20,9 @@ impl SafehouseApi {
 
     pub fn start(&self) {
         let mut server = Nickel::new();
-        
-        configure_routes(&mut server);
 
+        configure_routes(&mut server);
+        
         server.get("**", middleware!("test"));
 
         match server.listen(format!("{}:{}", self.host, self.port)) {
@@ -38,6 +38,13 @@ struct AuthorisationRequest {
     password: String
 }
 
+fn validate_token(token: &str) -> Result<(), &'static str> {
+    match token {
+        "lol" => Ok(()),
+        _ => Err("Invalid token")
+    }
+}
+
 fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
     match req.origin.uri.to_string().as_ref() {
         "/authorize" => res.next_middleware(),
@@ -49,11 +56,11 @@ fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> Middleware
                         Some(header) => header,
                         None => panic!("Failed to find authorization token")
                     };
-        
-                    // check token..
-                    println!("{}", auth_header.token);
 
-                    res.error(Forbidden, "Access denied")
+                    match validate_token(&auth_header.token) {
+                        Ok(_) => res.next_middleware(),
+                        Err(err) => res.error(Forbidden, err)
+                    }
                 }
             }
         }
@@ -70,5 +77,9 @@ fn configure_routes(server: &mut Nickel) {
 
         println!("username: {}, password {}", info.username, info.password);
         format!("hi {}", info.username)
+    });
+
+    server.get("/", middleware! { |req, res |
+        "hi"
     });
 }
