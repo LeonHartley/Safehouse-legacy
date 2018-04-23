@@ -22,7 +22,7 @@ impl SafehouseApi {
         let mut server = Nickel::new();
 
         configure_routes(&mut server);
-        
+
         server.get("**", middleware!("test"));
 
         match server.listen(format!("{}:{}", self.host, self.port)) {
@@ -52,14 +52,12 @@ fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> Middleware
             match &req.origin.method {
                 Options => res.next_middleware(),
                 _ => {
-                    let auth_header = match req.origin.headers.get::<Authorization<Bearer>>() {
-                        Some(header) => header,
-                        None => panic!("Failed to find authorization token")
-                    };
-
-                    match validate_token(&auth_header.token) {
-                        Ok(_) => res.next_middleware(),
-                        Err(err) => res.error(Forbidden, err)
+                    match req.origin.headers.get::<Authorization<Bearer>>() {
+                        Some(header) => match validate_token(&header.token) {
+                            Ok(_) => res.next_middleware(),
+                            Err(err) => res.error(Forbidden, err)
+                        },
+                        None => res.error(Forbidden, "No token set")
                     }
                 }
             }
