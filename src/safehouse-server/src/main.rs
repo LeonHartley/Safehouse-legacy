@@ -2,12 +2,21 @@
 extern crate hyper;
 extern crate rustc_serialize;
 
+use nickel::{Nickel};
+
 use api::SafehouseApi;
+use realtime::SafehouseRealtime;
 
 mod api;
+mod realtime;
+
+static SAFEHOUSE_SERVER_API_PORT: i16 = 1337;
+static SAFEHOUSE_SERVER_REALTIME_PORT: i16 = 1338;
 
 fn main() {
-    let api = SafehouseApi::new("0.0.0.0", 1337);
+    // start realtime server (websockets)
+    SafehouseRealtime::new("0.0.0.0", SAFEHOUSE_SERVER_REALTIME_PORT).start();
 
-    api.start();
+    // start api server (http)
+    SafehouseApi::new("0.0.0.0", SAFEHOUSE_SERVER_API_PORT).start();
 }
