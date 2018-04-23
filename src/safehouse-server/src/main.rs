@@ -1,18 +1,11 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+#[macro_use] extern crate nickel;
 
-extern crate rocket;
-#[macro_use] extern crate rocket_contrib;
+use api::SafehouseApi;
 
-use rocket_contrib::{Json, Value};
-
-#[get("/")]
-fn index() -> Json<Value> {
-    Json(json!({
-        "status": "online"
-    }))
-}
+mod api;
 
 fn main() {
-    rocket::ignite().mount("/", routes![index]).launch();
+    let api = SafehouseApi::new("0.0.0.0", 1337);
+
+    api.start();
 }
