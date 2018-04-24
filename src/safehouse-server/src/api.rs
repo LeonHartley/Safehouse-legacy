@@ -11,8 +11,8 @@ pub struct SafehouseApi {
 }
 
 impl SafehouseApi {
-    pub fn new(host: &'static str, port: i16) -> SafehouseApi {
-        SafehouseApi {
+    pub fn new(host: &'static str, port: i16) -> Self {
+        Self {
             host: host,
             port: port
         }
@@ -63,23 +63,20 @@ fn validate_token(token: &str) -> Result<(), &'static str> {
 }
 
 fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
-    match req.origin.uri.to_string().as_ref() {
-        "/authorize" => res.next_middleware(),
+    if(req.origin.method == Options) {
+        res.next_middleware()
+    } else {
+        match req.origin.uri.to_string().as_ref() {
+            "/authorize" => res.next_middleware(),
+            "/status" => res.next_middleware(),
 
-        _ => {
-            match &req.origin.method {
-                Options => res.next_middleware(),
-
-                _ => {
-                    match req.origin.headers.get::<Authorization<Bearer>>() {
-                        Some(header) => match validate_token(&header.token) {
-                            Ok(_) => res.next_middleware(),
-                            Err(err) => res.error(Forbidden, err)
-                        },
-
-                        None => res.error(Forbidden, "No token set")
-                    }
-                }
+            _ => match req.origin.headers.get::<Authorization<Bearer>>() {
+                Some(header) => match validate_token(&header.token) {
+                    Ok(_) => res.next_middleware(),
+                    Err(err) => res.error(Forbidden, err)
+                },
+                
+                None => res.error(Forbidden, "No token set")
             }
         }
     }
