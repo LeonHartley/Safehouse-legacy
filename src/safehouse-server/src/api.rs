@@ -33,9 +33,7 @@ impl SafehouseApi {
 
     pub fn init_routes(&self, server: &mut Nickel) {
         server.utilize(authorization_check);
-
-        server.get("**", middleware!("test"));
-
+        
         server.post("/authorize", middleware! { |req, mut res|
             let info = try_with!(res, {
                 req.json_as::<AuthorisationRequest>().map_err(|e| (BadRequest, e))
@@ -45,13 +43,20 @@ impl SafehouseApi {
                 user.to_json()
             } else {
                 res.set(NotFound);
-
                 format!("Failed to find user").to_json()
             }
         });
 
         server.get("/", middleware! { |req, res |
             "hi"
+        });
+
+        server.get("/contacts", middleware! { | req, res| 
+            if let Ok(contacts) = DatabaseCtx::find_user_contacts(1) { // soon we get the id from the token
+                contacts.to_json()
+            } else {
+                vec![0].to_json()
+            }
         });
     }
 }

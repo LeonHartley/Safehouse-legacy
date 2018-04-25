@@ -11,7 +11,9 @@ pub struct AuthorisationRequest {
 pub struct UserAccount {
     pub id: i64,
     pub username: String,
-    pub avatar: String
+    pub avatar: String,
+    pub date_created: String, 
+    pub date_active: String
 }
 
 impl ToJson for UserAccount {
