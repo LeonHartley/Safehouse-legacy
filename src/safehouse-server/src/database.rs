@@ -24,13 +24,15 @@ pub trait UserRepo {
 
 impl UserRepo for DatabaseCtx {
     fn find_user_by_auth(request: AuthorisationRequest) -> Result<UserAccount, DbError> {
-        let mut pool = match POOL.lock() {
+        let pool = match POOL.lock() {
             Ok(pool) => pool,
             Err(_e) => return Err(DbError::NoDbConnection),
         };
 
-        let users: Vec<UserAccount> = pool.prep_exec("SELECT id, username, avatar FROM accounts;", ())
-            .map(|result| {
+        let users: Vec<UserAccount> = pool.prep_exec("SELECT id, username, avatar FROM accounts WHERE username = :username AND password = :password", params! {
+                "username" => &request.username,
+                "password" => &request.password
+            }).map(|result| {
                 result.map(|x| x.unwrap()).map(|row| {
                     let (id, username, avatar) = mysql::from_row(row);
                     UserAccount {
