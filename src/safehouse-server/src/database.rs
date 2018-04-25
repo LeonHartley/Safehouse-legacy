@@ -29,7 +29,8 @@ impl UserRepo for DatabaseCtx {
             Err(_e) => return Err(DbError::NoDbConnection),
         };
 
-        let users: Vec<UserAccount> = pool.prep_exec("SELECT id, username, avatar FROM accounts WHERE username = :username AND password = :password", params! {
+        let users: Vec<UserAccount> = pool.prep_exec("SELECT id, username, avatar FROM accounts WHERE username = :username AND password = :password", 
+            params! {
                 "username" => &request.username,
                 "password" => &request.password
             }).map(|result| {
