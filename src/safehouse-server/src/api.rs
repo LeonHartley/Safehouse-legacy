@@ -1,8 +1,8 @@
 use nickel::{Nickel, JsonBody, HttpRouter, Request, Response, MiddlewareResult};
 use nickel::status::StatusCode::{self, Forbidden, NotFound, BadRequest};
 use hyper::method::Method::{Options};
-
 use hyper::header::{Authorization, Bearer};
+use rustc_serialize::json::ToJson;
 
 use models::{AuthorisationRequest};
 use database::{DatabaseCtx, UserRepo};
@@ -42,10 +42,11 @@ impl SafehouseApi {
             });
 
             if let Ok(user) = DatabaseCtx::find_user_by_auth(info) {
-                format!("hi {}", user.username)
+                user.to_json()
             } else {
                 res.set(NotFound);
-                format!("Failed to find user")
+
+                format!("Failed to find user").to_json()
             }
         });
 
