@@ -7,6 +7,7 @@ pub struct AuthorisationRequest {
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct UserAccount {
+    pub id: i64,
     pub username: String,
-    pub avatar: Vec<i8>
+    pub avatar: String
 }

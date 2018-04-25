@@ -10,6 +10,7 @@ use database::DatabaseCtx;
 
 use mysql::{Pool};
 
+mod error;
 mod models;
 mod database;
 mod api;

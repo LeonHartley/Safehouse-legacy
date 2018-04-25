@@ -1,5 +1,5 @@
 use nickel::{Nickel, JsonBody, HttpRouter, Request, Response, MiddlewareResult};
-use nickel::status::StatusCode::{self, Forbidden};
+use nickel::status::StatusCode::{self, Forbidden, NotFound, BadRequest};
 use hyper::method::Method::{Options};
 
 use hyper::header::{Authorization, Bearer};
@@ -36,15 +36,15 @@ impl SafehouseApi {
 
         server.get("**", middleware!("test"));
 
-        server.post("/authorize", middleware! { |req, res |
+        server.post("/authorize", middleware! { |req, mut res|
             let info = try_with!(res, {
-                req.json_as::<AuthorisationRequest>().map_err(|e| (StatusCode::BadRequest, e))
+                req.json_as::<AuthorisationRequest>().map_err(|e| (BadRequest, e))
             });
 
             if let Ok(user) = DatabaseCtx::find_user_by_auth(info) {
-                // we have user!
                 format!("hi {}", user.username)
             } else {
+                res.set(NotFound);
                 format!("Failed to find user")
             }
         });
