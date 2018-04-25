@@ -34,7 +34,7 @@ impl UserRepo for DatabaseCtx {
                 "username" => &request.username,
                 "password" => &request.password
             }).map(|result| {
-                result.map(|x| x.unwrap()).map(|row| {
+                result.map(Result::unwrap).map(|row| {
                     let (id, username, avatar) = mysql::from_row(row);
                     UserAccount {
                         id: id,
@@ -44,12 +44,8 @@ impl UserRepo for DatabaseCtx {
                 }).collect() 
             }).unwrap();
 
-        if let Some(user) = users.first() {
-            Ok(UserAccount {
-                id: user.id,
-                username: user.username.clone(),
-                avatar: user.avatar.clone()
-            })
+        if let Some(user) = users.into_iter().next() {
+            Ok(user)
         } else {
             Err(DbError::NotFound)
         }
