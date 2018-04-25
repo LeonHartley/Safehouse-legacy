@@ -1,9 +1,11 @@
-
 use nickel::{Nickel, JsonBody, HttpRouter, Request, Response, MiddlewareResult};
 use nickel::status::StatusCode::{self, Forbidden};
 use hyper::method::Method::{Options};
 
 use hyper::header::{Authorization, Bearer};
+
+use models::{AuthorisationRequest};
+use database::{DatabaseCtx, UserRepo};
 
 pub struct SafehouseApi {
     host: &'static str,
@@ -39,20 +41,18 @@ impl SafehouseApi {
                 req.json_as::<AuthorisationRequest>().map_err(|e| (StatusCode::BadRequest, e))
             });
 
-            println!("username: {}, password {}", info.username, info.password);
-            format!("hi {}", info.username)
+            if let Ok(user) = DatabaseCtx::find_user_by_auth(info) {
+                // we have user!
+                format!("hi {}", user.username)
+            } else {
+                format!("Failed to find user")
+            }
         });
 
         server.get("/", middleware! { |req, res |
             "hi"
         });
     }
-}
-
-#[derive(RustcDecodable, RustcEncodable)]
-struct AuthorisationRequest {
-    username: String,
-    password: String
 }
 
 fn validate_token(token: &str) -> Result<(), &'static str> {
@@ -63,7 +63,7 @@ fn validate_token(token: &str) -> Result<(), &'static str> {
 }
 
 fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
-    if(req.origin.method == Options) {
+    if req.origin.method == Options {
         res.next_middleware()
     } else {
         match req.origin.uri.to_string().as_ref() {

@@ -1,12 +1,17 @@
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate nickel;
 extern crate hyper;
 extern crate rustc_serialize;
-
-use nickel::{Nickel};
+extern crate mysql;
 
 use api::SafehouseApi;
 use realtime::SafehouseRealtime;
+use database::DatabaseCtx;
 
+use mysql::{Pool};
+
+mod models;
+mod database;
 mod api;
 mod realtime;
 
