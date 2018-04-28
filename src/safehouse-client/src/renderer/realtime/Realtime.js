@@ -1,3 +1,5 @@
+import Auth from '../auth/Auth'
+
 var connection = {
   socket: null,
   server: null
@@ -5,6 +7,8 @@ var connection = {
 
 var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
+
+  sendMessage({ message: 1, payload: { token: Auth.getAuthToken() } })
 }
 
 var handleMessage = (event) => {
@@ -12,6 +16,16 @@ var handleMessage = (event) => {
 
   // Handle messages differently.
   console.log(data)
+}
+
+var sendMessage = (message) => {
+  if (connection.socket.readyState === 1) {
+    connection.socket.send(JSON.stringify(message))
+  }
+}
+
+var disconnect = () => {
+  connection.socket.close()
 }
 
 export default {
@@ -23,9 +37,7 @@ export default {
     connection.socket.onopen = connectionReady
   },
 
-  send (message) {
-    if (connection.socket.readyState === 1) {
-      connection.socket.send(JSON.stringify(message))
-    }
-  }
+  send: sendMessage,
+
+  disconnect: disconnect
 }

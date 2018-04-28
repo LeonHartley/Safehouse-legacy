@@ -20,6 +20,8 @@
 
 <script>
   import Realtime from '../realtime/Realtime'
+  import ApiClient from '../api/Client'
+ 
   var ipc = require('electron').ipcRenderer
 
   export default {

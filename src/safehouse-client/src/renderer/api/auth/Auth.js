@@ -1,10 +1,5 @@
 import decodeToken from 'jwt-decode'
-
-var Session = {
-  getCookie () {
-    return 'lol'
-  }
-}
+import Store from 'electron-store'
 
 var authData = {
   token: null,
@@ -29,7 +24,7 @@ export default {
       return true
     }
 
-    var token = Session.getCookie('auth-token')
+    var token = Store.get('auth-token')
 
     if (token === null || token === undefined) {
       return false
@@ -38,23 +33,21 @@ export default {
     var payload = decodeToken(token)
 
     if (!isTokenValid(payload)) {
-      Session.removeCookie('auth-token')
+      Store.delete('auth-token')
       return false
     }
 
     authData.token = token
     authData.payload = payload
-
-    console.log(authData)
     return true
   },
 
   setAuthentication (token) {
-    Session.addCookie('auth-token', token)
+    Store.set('auth-token', token)
   },
 
   clearAuthentication () {
-    Session.removeCookie('auth-token')
+    Store.delete('auth-token')
 
     authData.token = null
     authData.payload = null

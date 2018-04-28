@@ -34,12 +34,10 @@ export default class ApiClient {
 
   axiosConfig () {
     var headers = {}
-    
+
     if (Auth.isAuthenticated()) {
       headers['Authorization'] = 'Bearer ' + Auth.getAuthToken()
     }
-
-    console.log(headers)
 
     return {
       headers: headers
