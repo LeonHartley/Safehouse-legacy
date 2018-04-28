@@ -22,10 +22,9 @@
   import Realtime from '../realtime/Realtime'
   import ApiClient from '../api/Client'
   import Auth from '../api/auth/Auth'
-
   var ipc = require('electron').ipcRenderer
 
-  function login (router) {
+  function onLogin (router, store) {
     ipc.send('resize-window', { height: 720, width: 1280 })
 
     Realtime.connect({
@@ -33,7 +32,15 @@
       port: 1338
     })
 
-    router.push('chat')
+    ApiClient.user.contacts().then((res) => {
+      console.log(res.data)
+
+      store.commit('setContacts', {
+        contacts: res.data
+      })
+
+      router.push('chat')
+    })
   }
 
   export default {
@@ -42,7 +49,9 @@
         event.preventDefault()
 
         ApiClient.auth.authorise(this.username, this.password).then((res) => {
-          login(this.$router)
+          Auth.setAuthentication(res.data.token)
+
+          onLogin(this.$router, this.$store)
         }).catch((err) => {
           console.log(err)
         })
@@ -50,9 +59,9 @@
     },
 
     data () {
-      if (Auth.isAuthenticated) {
-        login(this.$router)
-      }
+      // if (Auth.isAuthenticated) {
+      //   onLogin(this.$router)
+      // }
 
       return { username: '', password: '' }
     },

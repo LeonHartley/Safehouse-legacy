@@ -9,11 +9,11 @@ var authData = {
 }
 
 function isTokenValid (payload) {
-  var seconds = new Date().getTime() / 1000
+  // var seconds = new Date().getTime() / 1000
 
-  if (payload.exp <= seconds) {
-    return false
-  }
+  // if (payload.exp <= seconds) {
+  //   return false
+  // }
 
   // More checks?
   return true
@@ -25,7 +25,7 @@ export default {
       return true
     }
 
-    var token = Store.get('auth-token')
+    var token = Store.get('authorisation-token')
 
     if (token === null || token === undefined) {
       return false
@@ -34,7 +34,7 @@ export default {
     var payload = decodeToken(token)
 
     if (!isTokenValid(payload)) {
-      Store.delete('auth-token')
+      Store.delete('authorisation-token')
       return false
     }
 
@@ -44,11 +44,11 @@ export default {
   },
 
   setAuthentication (token) {
-    Store.set('auth-token', token)
+    Store.set('authorisation-token', token)
   },
 
   clearAuthentication () {
-    Store.delete('auth-token')
+    Store.delete('authorisation-token')
 
     authData.token = null
     authData.payload = null

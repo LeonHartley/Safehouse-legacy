@@ -1,19 +1,19 @@
 import Auth from '../auth/Auth'
 import Axios from 'axios'
 
-Axios.interceptors.response.use(function (response) {
-  if (response.data.token) {
-    if (response.data.token.invalidated) {
-      Auth.clearAuthentication()
-    } else {
-      Auth.setAuthentication(response.data.token.token)
-    }
-  }
+// Axios.interceptors.response.use(function (response) {
+//   if (response.data.token) {
+//     if (response.data.token.invalidated) {
+//       Auth.clearAuthentication()
+//     } else {
+//       Auth.setAuthentication(response.data.token.token)
+//     }
+//   }
 
-  return response
-}, function (error) {
-  return Promise.reject(error)
-})
+//   return response
+// }, function (error) {
+//   return Promise.reject(error)
+// })
 
 export default class ApiClient {
   constructor (config) {
@@ -38,6 +38,8 @@ export default class ApiClient {
     if (Auth.isAuthenticated()) {
       headers['Authorization'] = 'Bearer ' + Auth.getAuthToken()
     }
+
+    console.log(headers)
 
     return {
       headers: headers

@@ -44,7 +44,7 @@ impl SafehouseApi {
     fn init_routes(&self, server: &mut Nickel) {
         server.utilize(authorization_check);
         server.utilize(enable_cors);
-        
+
         server.options("**", middleware!(""));
 
         server.post("/authorise", middleware! { |req, mut res|
@@ -136,6 +136,7 @@ fn enable_cors<'mw>(_req: &mut Request, mut res: Response<'mw>) -> MiddlewareRes
         "X-Requested-With".into(),
         "Content-Type".into(),
         "Accept".into(),
+        "Authorization".into()
     ]));
 
     res.next_middleware()

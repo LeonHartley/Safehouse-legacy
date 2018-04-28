@@ -42,7 +42,8 @@ impl UserRepo for DatabaseCtx {
                         username: username,
                         avatar: avatar,
                         date_created: date_created,
-                        date_active: date_active
+                        date_active: date_active,
+                        status: "offline".to_string()
                     }
                 }).collect() 
             }).unwrap();
@@ -71,7 +72,8 @@ impl UserRepo for DatabaseCtx {
                         username: username,
                         avatar: avatar,
                         date_created: date_created,
-                        date_active: date_active
+                        date_active: date_active,
+                        status: "offline".to_string()
                     }
                 }).collect() 
             }).unwrap();

@@ -18,6 +18,7 @@ pub struct UserAccount {
     pub id: i64,
     pub username: String,
     pub avatar: String,
+    pub status: String,
     pub date_created: String, 
     pub date_active: String
 }
@@ -40,6 +41,7 @@ impl ToJson for UserAccount {
         map.insert("id".to_string(), self.id.to_json());
         map.insert("username".to_string(), self.username.to_json());
         map.insert("avatar".to_string(), self.avatar.to_json());
+        map.insert("status".to_string(), self.status.to_json());
         
         Json::Object(map)
     }

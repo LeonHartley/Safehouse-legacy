@@ -6,7 +6,7 @@
                 <li v-for="(contact, index) in contacts" 
                   :key="index" 
                   v-on:click="selectContact(index)"
-                  :class="{'active': activeContact.id == contact.id}">
+                  :class="{'active': activeContact != null && activeContact.id == contact.id}">
                      <img :src="contact.avatar" :class="{
                         'contact-img': true,
                         'status-online': contact.status == 'online',
@@ -25,7 +25,7 @@
                   'status-online': activeContact.status == 'online',
                   'status-offline': activeContact.status == 'offline'
                 }" />
-                <span class="contact-name">{{ activeContact.name }}</span>
+                <span class="contact-name">{{ activeContact.username }}</span>
             </div>
             <div class="main-chat">
                  
@@ -36,6 +36,7 @@
 
 <script>
   import Realtime from '../realtime/Realtime'
+  import { mapState } from 'vuex'
 
   Realtime.connect({host: 'localhost', port: 1338})
   // Realtime.send({msg: 'hi'})
@@ -45,16 +46,24 @@
 
     methods: {
       selectContact (index) {
-        this.activeContact = this.$store.state.User.contacts[index]
+        this.$store.commit('setActiveContact', {
+          activeContact: this.contacts[index]
+        })
       }
     },
 
-    data () {
-      return {
-        activeContact: this.$store.state.User.activeContact,
-        contacts: this.$store.state.User.contacts
-      }
+    computed: {
+      ...mapState({
+        contacts: state => state.User.contacts,
+        activeContact: state => state.User.activeContact
+      })
     }
+    // data () {
+    //   return {
+    //     activeContact: this.$store.state.User.activeContact,
+    //     contacts: this.$store.state.User.contacts
+    //   }
+    // }
   }
 </script>
 
