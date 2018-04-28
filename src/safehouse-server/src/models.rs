@@ -8,12 +8,29 @@ pub struct AuthorisationRequest {
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
+pub struct AuthorisationResponse {
+    pub token: String,
+    pub data: UserAccount
+}
+
+#[derive(RustcDecodable, RustcEncodable, Clone, Debug)]
 pub struct UserAccount {
     pub id: i64,
     pub username: String,
     pub avatar: String,
     pub date_created: String, 
     pub date_active: String
+}
+
+impl ToJson for AuthorisationResponse {
+    fn to_json(&self) -> Json {
+        let mut map = BTreeMap::new();
+
+        map.insert("token".to_string(), self.token.to_json());
+        map.insert("data".to_string(), self.data.to_json());
+
+        Json::Object(map)
+    }    
 }
 
 impl ToJson for UserAccount {
