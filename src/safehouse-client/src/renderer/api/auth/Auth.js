@@ -1,5 +1,7 @@
 import decodeToken from 'jwt-decode'
-import Store from 'electron-store'
+import ElectronStore from 'electron-store'
+
+var Store = new ElectronStore()
 
 var authData = {
   token: null,
@@ -14,7 +16,6 @@ function isTokenValid (payload) {
   }
 
   // More checks?
-
   return true
 }
 

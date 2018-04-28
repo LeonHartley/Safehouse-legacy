@@ -1,7 +1,7 @@
 use nickel::{Nickel, JsonBody, HttpRouter, Request, Response, MiddlewareResult};
 use nickel::status::StatusCode::{self, Forbidden, NotFound, BadRequest};
 use hyper::method::Method::{Options};
-use hyper::header::{Authorization, Bearer};
+use hyper::header::{AccessControlAllowOrigin, AccessControlAllowHeaders, Authorization, Bearer};
 use rustc_serialize::json::ToJson;
 
 use std::default::Default;
@@ -43,7 +43,10 @@ impl SafehouseApi {
 
     fn init_routes(&self, server: &mut Nickel) {
         server.utilize(authorization_check);
+        server.utilize(enable_cors);
         
+        server.options("**", middleware!(""));
+
         server.post("/authorise", middleware! { |req, mut res|
             let info = req.json_as::<AuthorisationRequest>().unwrap();
 
@@ -125,3 +128,16 @@ fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> Middleware
         }
     }
 }
+
+fn enable_cors<'mw>(_req: &mut Request, mut res: Response<'mw>) -> MiddlewareResult<'mw> {
+    res.set(AccessControlAllowOrigin::Any);
+    res.set(AccessControlAllowHeaders(vec![
+        "Origin".into(),
+        "X-Requested-With".into(),
+        "Content-Type".into(),
+        "Accept".into(),
+    ]));
+
+    res.next_middleware()
+}
+

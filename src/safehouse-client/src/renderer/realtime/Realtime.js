@@ -1,4 +1,4 @@
-import Auth from '../auth/Auth'
+import Auth from '../api/auth/Auth'
 
 var connection = {
   socket: null,
