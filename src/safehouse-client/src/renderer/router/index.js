@@ -7,12 +7,17 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'chat',
-      component: require('@/components/Chat').default
+      name: 'login',
+      component: require('@/components/Login').default
     },
     {
       path: '*',
       redirect: '/'
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: require('@/components/Chat').default
     }
   ]
 })

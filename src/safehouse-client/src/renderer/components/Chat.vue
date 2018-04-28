@@ -35,6 +35,11 @@
 </template>
 
 <script>
+  import Realtime from '../realtime/Realtime'
+
+  Realtime.connect({host: 'localhost', port: 1338})
+  // Realtime.send({msg: 'hi'})
+
   export default {
     name: 'chat',
 
@@ -46,7 +51,7 @@
 
     data () {
       return {
-        activeContact: this.$store.state.User.contacts[0],
+        activeContact: this.$store.state.User.activeContact,
         contacts: this.$store.state.User.contacts
       }
     }

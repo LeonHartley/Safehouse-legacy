@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Leon Hartley <dev@leonh.net>"]
 
 [dependencies]
-websocket = "0.20.2"
+ws = "0.7.6"
 nickel = "0.10.1"
 rustc-serialize = "0.3"
 hyper = "*"

@@ -6,6 +6,7 @@ extern crate hyper;
 extern crate rustc_serialize;
 extern crate jwt;
 extern crate crypto;
+extern crate ws;
 
 use api::SafehouseApi;
 use realtime::SafehouseRealtime;

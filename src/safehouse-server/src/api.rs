@@ -41,7 +41,7 @@ impl SafehouseApi {
         }
     }
 
-    pub fn init_routes(&self, server: &mut Nickel) {
+    fn init_routes(&self, server: &mut Nickel) {
         server.utilize(authorization_check);
         
         server.post("/authorise", middleware! { |req, mut res|
@@ -119,8 +119,8 @@ fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> Middleware
             "/status" => res.next_middleware(),
 
             _ => match validate_token(&req) {
-                Ok(_) => res.next_middleware(),
-                Err(err) => res.error(Forbidden, err.get_string())
+                    Ok(_) => res.next_middleware(),
+                    Err(err) => res.error(Forbidden, err.get_string())
             }
         }
     }
