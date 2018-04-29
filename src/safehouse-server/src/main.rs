@@ -19,6 +19,7 @@ mod models;
 mod database;
 mod api;
 mod realtime;
+mod auth;
 
 static SAFEHOUSE_SERVER_API_PORT: i16 = 1337;
 static SAFEHOUSE_SERVER_REALTIME_PORT: i16 = 1338;

@@ -4,18 +4,10 @@ use hyper::method::Method::{Options};
 use hyper::header::{AccessControlAllowOrigin, AccessControlAllowHeaders, Authorization, Bearer};
 use rustc_serialize::json::ToJson;
 
-use std::default::Default;
-use crypto::sha2::Sha256;
-
-use jwt::{Header, Registered, Token};
-
 use models::{AuthorisationRequest, AuthorisationResponse, UserAccount};
 use database::{DatabaseCtx, UserRepo};
 use error::{AuthorisationError, ErrorString};
-
-lazy_static! {
-    static ref AUTH_SECRET: &'static str = "*GDF_LCkE=Aa,G:RQ6CHQXKt{@X/E#)e84N#rk+YNNC7j0mtOipWS#[igFg|ikj";
-}
+use auth::{verify_token, generate_token};
 
 pub struct SafehouseApi {
     host: &'static str,
@@ -80,37 +72,11 @@ impl SafehouseApi {
 fn validate_token(req: &Request) -> Result<i64, AuthorisationError> {
      match req.origin.headers.get::<Authorization<Bearer>>() {
         Some(header) => {
-            let token = Token::<Header, Registered>::parse(&header.token).unwrap();
-            let secret = AUTH_SECRET.as_bytes();
-
-            if token.verify(&secret, Sha256::new()) {
-                if let Some(user_id) = token.claims.sub {
-                    Ok(user_id.parse().unwrap())
-                } else {
-                    Err(AuthorisationError::DataMissing)
-                }
-            } else {
-                Err(AuthorisationError::Parse)
-            }
+          verify_token(&header.token)
         },
 
         None => Err(AuthorisationError::DataMissing)
     }
-}
-
-fn generate_token(issuer: &'static str, user_id: i64) -> String {
-    let header: Header = Default::default();
-
-    let claims = Registered {
-        iss: Some(issuer.to_string()),
-        sub: Some(format!("{}", user_id)),
-        ..Default::default()
-    };
-
-    let token = Token::new(header, claims);
-    let jwt = token.signed(AUTH_SECRET.as_bytes(), Sha256::new()).unwrap();
-
-    format!("{}", jwt)
 }
 
 fn authorization_check<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
