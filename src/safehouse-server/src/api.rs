@@ -71,7 +71,7 @@ impl SafehouseApi {
 }
 
 fn validate_token(req: &Request) -> Result<i64, AuthorisationError> {
-     match req.origin.headers.get::<Authorization<Bearer>>() {
+    match req.origin.headers.get::<Authorization<Bearer>>() {
         Some(header) => {
           verify_token(&header.token)
         },

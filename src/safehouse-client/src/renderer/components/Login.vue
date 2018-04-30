@@ -33,8 +33,6 @@
     })
 
     ApiClient.user.contacts().then((res) => {
-      console.log(res.data)
-
       store.commit('setContacts', {
         contacts: res.data
       })

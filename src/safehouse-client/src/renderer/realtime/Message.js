@@ -33,7 +33,6 @@ export default class Message {
 
     index += 4
 
-    console.log(payloadLength)
     var payloadArray = new Uint8Array(payloadLength)
 
     for (var i = 0; i < payloadLength; i++) {

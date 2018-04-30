@@ -23,6 +23,38 @@ pub struct UserAccount {
     pub date_active: String
 }
 
+#[derive(RustcDecodable, RustcEncodable, Debug)]
+pub struct ContactStatus {
+    pub id: i64,
+    pub status: UserStatus
+}
+
+#[derive(RustcDecodable, RustcEncodable, Debug)]
+pub enum UserStatus {
+    Online,
+    Offline
+}
+
+impl ToJson for ContactStatus {
+    fn to_json(&self) -> Json {
+        let mut map = BTreeMap::new();
+
+        map.insert("id".to_string(), self.id.to_json());
+        map.insert("status".to_string(), self.status.to_json());
+
+        Json::Object(map)
+    }
+}
+
+impl ToJson for UserStatus {
+    fn to_json(&self) -> Json {
+        match(self) {
+            Online => "online".to_json(),
+            Offline => "offline".to_json()
+        }
+    }
+}
+
 impl ToJson for AuthorisationResponse {
     fn to_json(&self) -> Json {
         let mut map = BTreeMap::new();
