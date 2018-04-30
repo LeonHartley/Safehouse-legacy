@@ -24,6 +24,8 @@ pub trait UserRepo {
 }
 
 impl UserRepo for DatabaseCtx {
+
+    /// Finds a user by auth data (username & password)
     fn find_user_by_auth(request: AuthorisationRequest) -> Result<UserAccount, DbError> {
         let pool = match POOL.lock() {
             Ok(pool) => pool,
@@ -55,6 +57,7 @@ impl UserRepo for DatabaseCtx {
         }
     }
 
+    /// Finds users contacts with the provided user ID.
     fn find_user_contacts(user_id: i64) -> Result<Vec<UserAccount>, DbError> {
         let pool = match POOL.lock() {
             Ok(pool) => pool,

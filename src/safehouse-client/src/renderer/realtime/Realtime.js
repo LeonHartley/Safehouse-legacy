@@ -1,4 +1,5 @@
 import Auth from '../api/auth/Auth'
+import Message from './Message'
 
 var connection = {
   socket: null,
@@ -8,24 +9,37 @@ var connection = {
 var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
-  sendMessage({ message: 1, payload: { token: Auth.getAuthToken() } })
+  sendMessage(new Message(1, Auth.getAuthToken()))
 }
 
 var handleMessage = (event) => {
-  var data = JSON.parse(event.data)
+  getBuffer(event.data, (buffer) => {
+    console.log(buffer)
+    var msg = Message.decode(buffer)
 
-  // Handle messages differently.
-  console.log(data)
+    console.log('msg type: ' + msg.type + ', payload: ' + msg.payload)
+  })
 }
 
 var sendMessage = (message) => {
   if (connection.socket.readyState === 1) {
-    connection.socket.send(JSON.stringify(message))
+    // todo: expandable buffer..
+    connection.socket.send(message.encode(new ArrayBuffer(1024)))
   }
 }
 
 var disconnect = () => {
   connection.socket.close()
+}
+
+function getBuffer (blob, consumer) {
+  var fileReader = new FileReader()
+
+  fileReader.onload = function () {
+    consumer(this.result)
+  }
+
+  fileReader.readAsArrayBuffer(blob)
 }
 
 export default {

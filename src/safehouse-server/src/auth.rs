@@ -8,6 +8,7 @@ lazy_static! {
     static ref AUTH_SECRET: &'static str = "*GDF_LCkE=Aa,G:RQ6CHQXKt{@X/E#)e84N#rk+YNNC7j0mtOipWS#[igFg|ikj";
 }
 
+/// Generates a JWT string with the provided user ID added as the "sub" claim.
 pub fn generate_token(issuer: &'static str, user_id: i64) -> String {
     let header: Header = Default::default();
 
@@ -23,6 +24,7 @@ pub fn generate_token(issuer: &'static str, user_id: i64) -> String {
     format!("{}", jwt)
 }
 
+/// Verifies that a token is still valid and provides the user ID if it is valid.
 pub fn verify_token(token_str: &str) -> Result<i64, AuthorisationError> {
     let token = Token::<Header, Registered>::parse(&token_str).unwrap();
     let secret = AUTH_SECRET.as_bytes();

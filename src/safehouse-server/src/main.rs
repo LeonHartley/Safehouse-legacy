@@ -7,6 +7,7 @@ extern crate rustc_serialize;
 extern crate jwt;
 extern crate crypto;
 extern crate ws;
+extern crate byteorder;
 
 use api::SafehouseApi;
 use realtime::SafehouseRealtime;

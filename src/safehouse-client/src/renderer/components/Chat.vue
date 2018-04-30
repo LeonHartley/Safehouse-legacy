@@ -2,7 +2,6 @@
     <div class="main-container">
         <div class="side-bar">
             <ul class="contacts">
-
                 <li v-for="(contact, index) in contacts" 
                   :key="index" 
                   v-on:click="selectContact(index)"
@@ -35,11 +34,7 @@
 </template>
 
 <script>
-  import Realtime from '../realtime/Realtime'
   import { mapState } from 'vuex'
-
-  Realtime.connect({host: 'localhost', port: 1338})
-  // Realtime.send({msg: 'hi'})
 
   export default {
     name: 'chat',

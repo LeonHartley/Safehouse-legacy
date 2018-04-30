@@ -56,12 +56,13 @@ impl SafehouseApi {
         });
 
         server.get("/contacts", middleware! { | req, res| 
-            if let Ok(user_id) = validate_token(&req) {
-                if let Ok(contacts) = DatabaseCtx::find_user_contacts(user_id) {
-                    contacts.to_json()
-                } else {
-                    vec![0].to_json()
-                }
+            let user_id = match validate_token(&req) {
+                Ok(user_id) => user_id,
+                Err(err) => return res.error(Forbidden, err.get_string())
+            };
+
+            if let Ok(contacts) = DatabaseCtx::find_user_contacts(user_id) {
+                contacts.to_json()
             } else {
                 vec![0].to_json()
             }
