@@ -53,12 +53,6 @@
         activeContact: state => state.User.activeContact
       })
     }
-    // data () {
-    //   return {
-    //     activeContact: this.$store.state.User.activeContact,
-    //     contacts: this.$store.state.User.contacts
-    //   }
-    // }
   }
 </script>
 

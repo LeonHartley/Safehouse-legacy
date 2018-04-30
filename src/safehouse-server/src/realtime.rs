@@ -1,12 +1,13 @@
 use std::thread;
 use std::io::BufReader;
-use std::sync::Mutex;
+use std::sync::{Mutex};
 use std::collections::HashMap;
 use ws::{listen, Result, Sender, Message, CloseCode, Handler};
 use bytebuffer::{ByteBuffer};
 use auth::verify_token;
 use database::{DatabaseCtx, UserRepo};
 use models::{UserStatus, ContactStatus};
+use rustc_serialize::{json};
 
 lazy_static! {
     static ref REALTIME_CLIENTS: Mutex<HashMap<i64, WebSocket>> = Mutex::new(HashMap::new());
@@ -43,6 +44,7 @@ impl SafehouseRealtime {
     }
 }
 
+#[derive(Clone)]
 struct WebSocket {
     socket: Sender,
     user_id: Option<i64>
@@ -102,16 +104,34 @@ impl Handler for WebSocket {
     }
 }
 
+impl WebSocket {
+    fn send(&self, msg_type: u16, payload: String) {
+        let mut buffer = ByteBuffer::new();
+
+        buffer.write_u16(msg_type);
+        buffer.write_u16(payload.len() as u16);
+        buffer.write_bytes(&payload.into_bytes());
+
+        self.socket.send(buffer.to_bytes());
+    }
+}
+
 fn handle_authentication(client: &mut WebSocket, token: String) {
     let user_id = match verify_token(&token) {
         Ok(user_id) => user_id,
         Err(_) => return
     };
 
-    client.user_id = Some(user_id)
+    client.user_id = Some(user_id);
+
+    println!("User id: {}, token {}", user_id, token);
+
+    if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
+        clients.insert(user_id, client.clone());
+    };
 }
 
-fn handle_get_status(client: &mut WebSocket) {
+fn handle_get_status(client: &WebSocket) {
     let user_id = match client.user_id {
         Some(user_id) => user_id,
         None => return
@@ -131,7 +151,7 @@ fn handle_get_status(client: &mut WebSocket) {
         })
     }
 
-    println!("{:?}", status_vec);
+    client.send(2, json::encode(&status_vec).unwrap());
 }
 
 fn start_realtime(host: &'static str, port: i16) {

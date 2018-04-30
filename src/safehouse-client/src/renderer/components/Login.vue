@@ -29,15 +29,16 @@
 
     Realtime.connect({
       host: 'localhost',
-      port: 1338
-    })
+      port: 1338,
+      ready: (e) => {
+        ApiClient.user.contacts().then((res) => {
+          store.commit('setContacts', {
+            contacts: res.data
+          })
 
-    ApiClient.user.contacts().then((res) => {
-      store.commit('setContacts', {
-        contacts: res.data
-      })
-
-      router.push('chat')
+          router.push('chat')
+        })
+      }
     })
   }
 

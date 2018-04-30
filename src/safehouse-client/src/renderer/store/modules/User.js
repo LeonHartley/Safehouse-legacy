@@ -11,6 +11,12 @@ const mutations = {
 
   setActiveContact (state, payload) {
     state.activeContact = payload.activeContact
+  },
+
+  updateContacts (state, payload) {
+    for (var i = 0; i < state.contacts.length; i++) {
+      state.contacts[i].status = payload[i].status.toLowerCase()
+    }
   }
 }
 

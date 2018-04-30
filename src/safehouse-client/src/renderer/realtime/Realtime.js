@@ -1,5 +1,6 @@
 import Auth from '../api/auth/Auth'
 import Message from './Message'
+import Store from '../store'
 
 var connection = {
   socket: null,
@@ -10,12 +11,21 @@ var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
   sendMessage(new Message(1, Auth.getAuthToken()))
+
+  // TODO: Remove this once we have status updates done ;-)
+  setInterval(() => {
+    sendMessage(new Message(2))
+  }, 3000)
 }
 
 var handleMessage = (event) => {
   getBuffer(event.data, (buffer) => {
-    console.log(buffer)
     var msg = Message.decode(buffer)
+
+    if (msg.type === 2) {
+      // contact status update
+      Store.commit('updateContacts', JSON.parse(msg.payload))
+    }
 
     console.log('msg type: ' + msg.type + ', payload: ' + msg.payload)
   })
@@ -48,10 +58,14 @@ export default {
     connection.socket = new WebSocket('ws://' + server.host + ':' + server.port)
 
     connection.socket.onmessage = handleMessage
-    connection.socket.onopen = connectionReady
+    connection.socket.onopen = (e) => {
+      connectionReady(e)
+      server.ready()
+    }
   },
 
   send: sendMessage,
 
-  disconnect: disconnect
+  disconnect: disconnect,
+  Message: Message
 }

@@ -1,23 +1,25 @@
-import decodeToken from 'jwt-decode'
-import ElectronStore from 'electron-store'
+// import decodeToken from 'jwt-decode'
+// import ElectronStore from 'electron-store'
 
-var Store = new ElectronStore()
+// var Store = new ElectronStore()
 
 var authData = {
   token: null,
   payload: null
 }
 
-function isTokenValid (payload) {
-  // var seconds = new Date().getTime() / 1000
+// let key = ((Math.random() * 100) + 1) + 'authorisation-token'
 
-  // if (payload.exp <= seconds) {
-  //   return false
-  // }
+// function isTokenValid (payload) {
+//   // var seconds = new Date().getTime() / 1000
 
-  // More checks?
-  return true
-}
+//   // if (payload.exp <= seconds) {
+//   //   return false
+//   // }
+
+//   // More checks?
+//   return true
+// }
 
 export default {
   isAuthenticated () {
@@ -25,31 +27,28 @@ export default {
       return true
     }
 
-    var token = Store.get('authorisation-token')
+    return false
+    // if (token === null || token === undefined) {
+    //   return false
+    // }
 
-    if (token === null || token === undefined) {
-      return false
-    }
+    // var payload = decodeToken(token)
 
-    var payload = decodeToken(token)
+    // if (!isTokenValid(payload)) {
+    //   Store.delete(key)
+    //   return false
+    // }
 
-    if (!isTokenValid(payload)) {
-      Store.delete('authorisation-token')
-      return false
-    }
-
-    authData.token = token
-    authData.payload = payload
-    return true
+    // authData.token = token
+    // authData.payload = payload
+    // return true
   },
 
   setAuthentication (token) {
-    Store.set('authorisation-token', token)
+    authData.token = token
   },
 
   clearAuthentication () {
-    Store.delete('authorisation-token')
-
     authData.token = null
     authData.payload = null
   },

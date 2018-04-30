@@ -1,5 +1,5 @@
 export default class Message {
-  constructor (type, payload) {
+  constructor (type, payload = '') {
     this.type = type
     this.payload = payload
   }
@@ -31,7 +31,7 @@ export default class Message {
     var type = view.getUint16(index)
     var payloadLength = view.getUint16(index += 2)
 
-    index += 4
+    index += 1
 
     var payloadArray = new Uint8Array(payloadLength)
 
