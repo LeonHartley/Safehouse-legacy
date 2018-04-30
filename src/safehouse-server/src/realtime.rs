@@ -3,7 +3,7 @@ use std::io::BufReader;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use ws::{listen, Result, Sender, Message, CloseCode, Handler};
-use byteorder::{BigEndian, ReadBytesExt};
+use bytebuffer::{ByteBuffer};
 
 lazy_static! {
     static ref REALTIME_CLIENTS: Mutex<HashMap<i64, WebSocket>> = Mutex::new(HashMap::new());
@@ -39,17 +39,17 @@ pub enum RealtimeEvent {
 }
 
 impl RealtimeEvent {
-    fn parse(client: &WebSocket, data: Vec<u8>) -> RealtimeEvent {
-        let mut id_buf = &data[0..2];
-        let mut len_buf = &data[2..4];
-
-        let id = id_buf.read_u16::<BigEndian>().unwrap();
-        let payload_len = len_buf.read_u16::<BigEndian>().unwrap() as usize;
+    fn parse(client: &WebSocket, mut data: Vec<u8>) -> RealtimeEvent {
+        let mut buffer = ByteBuffer::from_bytes(&mut data);
         
-        let mut payload_buf = &data[4..payload_len + 1];
+        let id = buffer.read_u16();
+        let payload_len = buffer.read_u16() as usize;
+        let payload = buffer.read_bytes(payload_len);
+
+        println!("Id: {}, Payload len: {}, Vec len: {}", id, payload_len, data.len());
 
         match id {
-            1 => RealtimeEvent::Authenticate(String::from_utf8(payload_buf.to_vec()).unwrap()),
+            1 => RealtimeEvent::Authenticate(String::from_utf8(payload).unwrap()),
             2 => RealtimeEvent::GetStatus(),
             _ => RealtimeEvent::Unknown()
         }

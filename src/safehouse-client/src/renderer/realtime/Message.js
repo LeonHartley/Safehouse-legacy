@@ -12,11 +12,15 @@ export default class Message {
     view.setUint16(index, this.type)
     view.setUint16(index += 2, this.payload.length)
 
+    index += 1
+
     var payloadBuf = new TextEncoder('utf-8').encode(this.payload)
 
-    for (var i = 0; i < payloadBuf.length; i++) {
+    for (var i = 0; i < payloadBuf.length + 1; i++) {
       view.setUint8(index += 1, payloadBuf[i])
     }
+
+    view.setUint8(index += 1, 0)
 
     return buffer.slice(0, index)
   }
