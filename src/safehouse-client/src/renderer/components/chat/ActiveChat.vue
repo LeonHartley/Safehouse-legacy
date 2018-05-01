@@ -13,7 +13,13 @@
     <div class="main-chat">
       <div class="messages">
         <ul v-if="activeChat.messages.length > 0">
-          <li v-for="(message, index) in activeChat.messages" :key="index" >{{message.txt}}</li>
+          <li v-for="(message, index) in activeChat.messages" :key="index" >
+          <div :class="{
+            'chat-message': true,
+            'sent': message.local
+          }">{{message.txt}}</div>
+          <div class="clear"></div>
+          </li>
         </ul>
       </div>
 
@@ -45,11 +51,15 @@
           return
         }
 
-        Realtime.send(new Realtime.Message(3, JSON.stringify({
+        var msg = {
+          local: true,
           sender: Auth.userId(),
           user_id: this.activeContact.id,
           message: this.currentMessage
-        })))
+        }
+
+        Realtime.send(new Realtime.Message(3, JSON.stringify(msg)))
+        this.$store.commit('newChatMessage', msg)
 
         this.currentMessage = ''
       }
@@ -57,6 +67,7 @@
 
     data () {
       return {
+        userId: Auth.userId(),
         currentMessage: ''
       }
     },
@@ -87,6 +98,36 @@
     width: 95%;
     display: block;
     margin: auto;
+  }
+
+  .messages ul {
+    list-style: none;
+    width: 100%;
+    padding: 0;
+  }
+
+  .messages li {
+    width: 100%;
+    position: relative;
+  }
+
+  .chat-message {
+    display: inline-block;
+    background: #435f7a;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 15px 0 15px;
+  }
+
+  .chat-message.sent {
+    float: right;
+    background: #f9f9f9;
+    color: #555;
+  }
+
+  .clear {
+    clear: both;
   }
 
   .main-none {

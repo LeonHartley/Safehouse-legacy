@@ -5,21 +5,25 @@ const state = {
 
 const mutations = {
   newChatMessage (state, payload) {
-    if (state.chats[payload.sender] === undefined) {
-      state.chats[payload.sender] = {
-        user_id: payload.sender,
+    var local = payload.local !== undefined
+    var id = local ? payload.user_id : payload.sender
+
+    if (state.chats[id] === undefined) {
+      state.chats[id] = {
+        user_id: id,
         messages: []
       }
     }
 
     var msg = {
-      from: payload.sender,
+      local: local,
+      from: id,
       txt: payload.message
     }
 
-    state.chats[payload.sender].messages.push(msg)
+    state.chats[id].messages.push(msg)
 
-    if (state.activeChat.user_id === payload.sender) {
+    if (state.activeChat.user_id === id) {
       state.activeChat.messages.push(msg)
     }
   },
