@@ -103,9 +103,11 @@ impl Handler for WebSocket {
                 Ok(clients) => clients,
                 Err(_e) => return
             };
-
+            
             clients.remove(&user_id);
         }
+
+        self.notify_status(UserStatus::Offline);
 
         println!("WebSocket closing for ({:?}) {}", code, reason);
     }
@@ -143,13 +145,13 @@ impl WebSocket {
             None => return
         };
 
-        let contact_status = ContactStatus {
+        let msg = json::encode(&ContactStatus {
             id: user_id,
             status
-        };
+        }).unwrap();
 
         for c in contacts.iter() {
-            SafehouseRealtime::send_msg(c, 2, json::encode(&contact_status).unwrap());
+            SafehouseRealtime::send_msg(c, 2, msg.clone());
         };
     }
 }

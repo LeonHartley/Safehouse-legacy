@@ -25,20 +25,17 @@
   var ipc = require('electron').ipcRenderer
 
   function onLogin (router, store) {
-    ipc.send('resize-window', { height: 720, width: 1280 })
+    ApiClient.user.contacts().then((res) => {
+      store.commit('setContacts', res.data)
 
-    Realtime.connect({
-      host: 'localhost',
-      port: 1338,
-      ready: (e) => {
-        ApiClient.user.contacts().then((res) => {
-          store.commit('setContacts', {
-            contacts: res.data
-          })
-
+      Realtime.connect({
+        host: 'localhost',
+        port: 1338,
+        ready: (e) => {
+          ipc.send('resize-window', { height: 720, width: 1280 })
           router.push('chat')
-        })
-      }
+        }
+      })
     })
   }
 

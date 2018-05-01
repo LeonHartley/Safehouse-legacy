@@ -11,23 +11,16 @@ var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
   sendMessage(new Message(1, Auth.getAuthToken()))
-
-  // TODO: Remove this once we have status updates done ;-)
-  setInterval(() => {
-    sendMessage(new Message(2))
-  }, 3000)
 }
 
 var handleMessage = (event) => {
   getBuffer(event.data, (buffer) => {
     var msg = Message.decode(buffer)
+    console.log('msg type: ' + msg.type + ', payload: ' + msg.payload)
 
     if (msg.type === 2) {
-      // contact status update
-      Store.commit('updateContacts', JSON.parse(msg.payload))
+      Store.commit('updateContactStatus', JSON.parse(msg.payload))
     }
-
-    console.log('msg type: ' + msg.type + ', payload: ' + msg.payload)
   })
 }
 

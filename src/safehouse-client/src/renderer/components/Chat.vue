@@ -1,63 +1,28 @@
 <template>
     <div class="main-container">
         <div class="side-bar">
-            <ul class="contacts">
-                <li v-for="(contact, index) in contacts" 
-                  :key="index" 
-                  v-on:click="selectContact(index)"
-                  :class="{'active': activeContact != null && activeContact.id == contact.id}">
-                     <img :src="contact.avatar" :class="{
-                        'contact-img': true,
-                        'status-online': contact.status == 'online',
-                        'status-offline': contact.status == 'offline'
-                      }"/>
-                </li>
-                
-            </ul>
+            <contacts-bar></contacts-bar>
         </div>
 
-        <div class="main">
-            <div class="main-contact">
-                <img :src="activeContact.avatar" :class="{
-                  'contact-img': true,
-                  'contact-img-large': true,
-                  'status-online': activeContact.status == 'online',
-                  'status-offline': activeContact.status == 'offline'
-                }" />
-                <span class="contact-name">{{ activeContact.username }}</span>
-            </div>
-            <div class="main-chat">
-                 
-            </div>
-        </div>
+        <active-chat></active-chat>
     </div>
 </template>
 
 <script>
-  import { mapState } from 'vuex'
+  import ActiveChat from './chat/ActiveChat.vue'
+  import ContactsBar from './contacts/ContactsBar.vue'
 
   export default {
     name: 'chat',
 
-    methods: {
-      selectContact (index) {
-        this.$store.commit('setActiveContact', {
-          activeContact: this.contacts[index]
-        })
-      }
-    },
-
-    computed: {
-      ...mapState({
-        contacts: state => state.User.contacts,
-        activeContact: state => state.User.activeContact
-      })
+    components: {
+      ActiveChat,
+      ContactsBar
     }
   }
 </script>
 
 <style>
-
     .main-container {
         width: 100%;
         height: 100vh;
