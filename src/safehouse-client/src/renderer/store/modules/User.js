@@ -26,7 +26,7 @@ const mutations = {
     var updateStatus = (contact) => {
       state.contacts[contact.id].status = contact.status.toLowerCase()
 
-      if (state.activeContact.id === contact.id) {
+      if (state.activeContact !== null && state.activeContact.id === contact.id) {
         state.activeContact.status = contact.status.toLowerCase()
       }
     }
