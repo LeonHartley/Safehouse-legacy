@@ -1,4 +1,4 @@
-// import decodeToken from 'jwt-decode'
+import decodeToken from 'jwt-decode'
 // import ElectronStore from 'electron-store'
 
 // var Store = new ElectronStore()
@@ -42,6 +42,12 @@ export default {
     // authData.token = token
     // authData.payload = payload
     // return true
+  },
+
+  userId () {
+    var payload = decodeToken(authData.token)
+
+    return payload.sub
   },
 
   setAuthentication (token) {

@@ -30,10 +30,30 @@ pub struct ContactStatus {
 }
 
 #[derive(RustcDecodable, RustcEncodable, Debug)]
+pub struct ChatMessage {
+    pub sender: i64,
+    pub user_id: i64,
+    pub message: String
+}
+
+#[derive(RustcDecodable, RustcEncodable, Debug)]
 pub enum UserStatus {
     Online,
     Offline
 }
+
+impl ToJson for ChatMessage {
+    fn to_json(&self) -> Json {
+        let mut map = BTreeMap::new();
+
+        map.insert("sender".to_string(), self.sender.to_json());
+        map.insert("user_id".to_string(), self.user_id.to_json());
+        map.insert("message".to_string(), self.message.to_json());
+
+        Json::Object(map)
+    }
+}
+
 
 impl ToJson for ContactStatus {
     fn to_json(&self) -> Json {

@@ -24,11 +24,14 @@
         this.$store.commit('setActiveContact', {
           activeContact: this.contacts[id]
         })
+
+        this.$store.commit('startChat', id)
       }
     },
 
     computed: {
       ...mapState({
+        chats: state => state.Chat.chats,
         contacts: state => state.User.contacts,
         activeContact: state => state.User.activeContact
       })

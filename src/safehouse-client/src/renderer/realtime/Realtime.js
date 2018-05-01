@@ -10,6 +10,11 @@ var connection = {
 var handlers = {
   '2': (msg) => {
     Store.commit('updateContactStatus', JSON.parse(msg.payload))
+  },
+  '3': (msg) => {
+    console.log(msg)
+
+    Store.commit('newChatMessage', JSON.parse(msg.payload))
   }
 }
 

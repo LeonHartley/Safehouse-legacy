@@ -6,7 +6,7 @@ use ws::{listen, Result, Sender, Message, CloseCode, Handler};
 use bytebuffer::{ByteBuffer};
 use auth::verify_token;
 use database::{DatabaseCtx, UserRepo};
-use models::{UserStatus, ContactStatus};
+use models::{UserStatus, ContactStatus, ChatMessage};
 use rustc_serialize::{json};
 
 lazy_static! {
@@ -54,6 +54,7 @@ struct WebSocket {
 pub enum RealtimeEvent {
     Authenticate(String),
     GetStatus(),
+    SendMessage(ChatMessage),
     Unknown()
 }
 
@@ -68,6 +69,7 @@ impl RealtimeEvent {
         match id {
             1 => RealtimeEvent::Authenticate(String::from_utf8(payload).unwrap()),
             2 => RealtimeEvent::GetStatus(),
+            3 => RealtimeEvent::SendMessage(json::decode(&String::from_utf8(payload).unwrap()).unwrap()),
             _ => RealtimeEvent::Unknown()
         }
     }
@@ -78,6 +80,7 @@ impl Handler for WebSocket {
         match RealtimeEvent::parse(&self, msg.into_data()) {
             RealtimeEvent::Authenticate(token) => handle_authentication(self, token),
             RealtimeEvent::GetStatus() => handle_get_status(self),
+            RealtimeEvent::SendMessage(message) => handle_send_message(self, message),
 
             _ => {
                 println!("Unhandled request");
@@ -202,6 +205,32 @@ fn handle_get_status(client: &WebSocket) {
     };
 
     client.socket.send_msg(2, json::encode(&status_vec).unwrap());
+}
+
+fn handle_send_message(client: &WebSocket, message: ChatMessage) {
+    let user_id = match client.user_id {
+        Some(user_id) => user_id,
+        None => return
+    };
+
+    let contacts = match client.contacts {
+        Some(ref contacts) => match contacts.lock() {
+            Ok(contacts) => contacts,
+            Err(_) => return
+        },
+
+        None => return
+    };
+
+    let clients = match REALTIME_CLIENTS.lock() {
+        Ok(clients) => clients,
+        Err(_e) => return
+    };
+
+    if contacts.contains(&message.user_id) {
+        println!("Message sent: {:?}", message);
+        SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
+    }
 }
 
 fn start_realtime(host: &'static str, port: i16) {

@@ -12,8 +12,8 @@
     </div>
     <div class="main-chat">
       <div class="messages">
-        <ul v-if="messages.length > 0">
-          <li v-for="(message, index) in messages" :key="index" >{{message}}</li>
+        <ul v-if="activeChat.messages.length > 0">
+          <li v-for="(message, index) in activeChat.messages" :key="index" >{{message.txt}}</li>
         </ul>
       </div>
 
@@ -32,6 +32,9 @@
 <script>
   import { mapState } from 'vuex'
 
+  import Realtime from '../../realtime/Realtime'
+  import Auth from '../../api/auth/Auth'
+
   export default {
     name: 'active-chat',
     methods: {
@@ -42,21 +45,26 @@
           return
         }
 
-        this.messages.push(this.currentMessage)
+        Realtime.send(new Realtime.Message(3, JSON.stringify({
+          sender: Auth.userId(),
+          user_id: this.activeContact.id,
+          message: this.currentMessage
+        })))
+
         this.currentMessage = ''
       }
     },
 
     data () {
       return {
-        messages: [],
         currentMessage: ''
       }
     },
 
     computed: {
       ...mapState({
-        chat: state => state.Chat.activeChat,
+        activeChat: (state) => state.Chat.activeChat,
+        chats: (state) => state.Chat.chats,
         activeContact: state => state.User.activeContact
       })
     }
