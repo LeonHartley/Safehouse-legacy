@@ -10,7 +10,7 @@ use models::{UserStatus, ContactStatus};
 use rustc_serialize::{json};
 
 lazy_static! {
-    static ref REALTIME_CLIENTS: Mutex<HashMap<i64, WebSocket>> = Mutex::new(HashMap::new());
+    static ref REALTIME_CLIENTS: Mutex<HashMap<i64, Sender>> = Mutex::new(HashMap::new());
 }
 
 pub struct SafehouseRealtime {
@@ -42,12 +42,23 @@ impl SafehouseRealtime {
             UserStatus::Offline
         }
     }
+
+    pub fn send_msg(user_id: &i64, msg_type: u16, payload: String) {
+        let clients = match REALTIME_CLIENTS.lock() {
+            Ok(clients) => clients,
+            Err(e) => return
+        };
+
+        if let Some(client) = clients.get(&user_id) {
+            client.send_msg(msg_type, payload);
+        }
+    }
 }
 
-#[derive(Clone)]
 struct WebSocket {
     socket: Sender,
-    user_id: Option<i64>
+    user_id: Option<i64>,
+    contacts: Option<Mutex<Vec<i64>>>
 }
 
 pub enum RealtimeEvent {
@@ -64,8 +75,6 @@ impl RealtimeEvent {
         let payload_len = buffer.read_u16() as usize;
         let payload = buffer.read_bytes(payload_len);
 
-        println!("Id: {}, Payload len: {}, Vec len: {}", id, payload_len, data.len());
-
         match id {
             1 => RealtimeEvent::Authenticate(String::from_utf8(payload).unwrap()),
             2 => RealtimeEvent::GetStatus(),
@@ -76,8 +85,6 @@ impl RealtimeEvent {
 
 impl Handler for WebSocket {
     fn on_message(&mut self, msg: Message) -> Result<()> {
-        println!("{}", msg);
-
         match RealtimeEvent::parse(&self, msg.into_data()) {
             RealtimeEvent::Authenticate(token) => handle_authentication(self, token),
             RealtimeEvent::GetStatus() => handle_get_status(self),
@@ -104,15 +111,46 @@ impl Handler for WebSocket {
     }
 }
 
-impl WebSocket {
-    fn send(&self, msg_type: u16, payload: String) {
+trait SendMessage {
+    fn send_msg(&self, msg_type: u16, payload: String);
+}
+
+impl SendMessage for Sender {
+    fn send_msg(&self, msg_type: u16, payload: String) {
         let mut buffer = ByteBuffer::new();
 
         buffer.write_u16(msg_type);
         buffer.write_u16(payload.len() as u16);
         buffer.write_bytes(&payload.into_bytes());
 
-        self.socket.send(buffer.to_bytes());
+        self.send(buffer.to_bytes());
+    }
+}
+
+impl WebSocket {
+    fn notify_status(&self, status: UserStatus) {
+        let contacts = match self.contacts {
+            Some(ref contacts) => match contacts.lock() {
+                Ok(contacts) => contacts,
+                Err(_) => return
+            },
+
+            None => return
+        };
+
+        let user_id = match self.user_id {
+            Some(user_id) => user_id,
+            None => return
+        };
+
+        let contact_status = ContactStatus {
+            id: user_id,
+            status
+        };
+
+        for c in contacts.iter() {
+            SafehouseRealtime::send_msg(c, 2, json::encode(&contact_status).unwrap());
+        };
     }
 }
 
@@ -124,11 +162,25 @@ fn handle_authentication(client: &mut WebSocket, token: String) {
 
     client.user_id = Some(user_id);
 
-    println!("User id: {}, token {}", user_id, token);
+    let contact_data = match DatabaseCtx::find_user_contacts(user_id) {
+        Ok(contact_data) => contact_data,
+        Err(_) => return
+    };
+
+    let mut contacts = Vec::new();
+
+    for contact in contact_data {
+        contacts.push(contact.id);
+    }
+
+    client.contacts = Some(Mutex::new(contacts));
 
     if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
-        clients.insert(user_id, client.clone());
+        clients.insert(user_id, client.socket.clone());
     };
+
+    client.notify_status(UserStatus::Online);
+
 }
 
 fn handle_get_status(client: &WebSocket) {
@@ -137,21 +189,7 @@ fn handle_get_status(client: &WebSocket) {
         None => return
     };
 
-    let contacts = match DatabaseCtx::find_user_contacts(user_id) {
-        Ok(contacts) => contacts,
-        Err(_) => return
-    };
-
-    let mut status_vec = Vec::new();
-
-    for contact in contacts {
-        status_vec.push(ContactStatus {
-            id: contact.id,
-            status: SafehouseRealtime::get_status(contact.id)
-        })
-    }
-
-    client.send(2, json::encode(&status_vec).unwrap());
+    //client.socket.send_msg(2, json::encode(&status_vec).unwrap());
 }
 
 fn start_realtime(host: &'static str, port: i16) {
@@ -160,7 +198,7 @@ fn start_realtime(host: &'static str, port: i16) {
         
         listen(format!("{}:{}", host, port), |out| {
             println!("ws connected");
-            WebSocket { socket: out, user_id: None }
+            WebSocket { socket: out, user_id: None, contacts: None }
         });
     });
 }
