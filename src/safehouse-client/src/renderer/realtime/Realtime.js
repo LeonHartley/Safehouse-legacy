@@ -7,6 +7,12 @@ var connection = {
   server: null
 }
 
+var handlers = {
+  '2': (msg) => {
+    Store.commit('updateContactStatus', JSON.parse(msg.payload))
+  }
+}
+
 var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
@@ -19,9 +25,7 @@ var handleMessage = (event) => {
     var msg = Message.decode(buffer)
     console.log('msg type: ' + msg.type + ', payload: ' + msg.payload)
 
-    if (msg.type === 2) {
-      Store.commit('updateContactStatus', JSON.parse(msg.payload))
-    }
+    handlers[msg.type](msg)
   })
 }
 

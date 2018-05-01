@@ -10,16 +10,16 @@ const mutations = {
     for (var i = 0; i < payload.length; i++) {
       let contact = payload[i]
 
-      if (i === 0) {
-        state.activeContact = contact
-      }
-
       state.contacts[contact.id] = contact
     }
   },
 
   setActiveContact (state, payload) {
-    state.activeContact = payload.activeContact
+    if (state.activeContact !== null && state.activeContact.id === payload.activeContact.id) {
+      state.activeContact = null
+    } else {
+      state.activeContact = payload.activeContact
+    }
   },
 
   updateContactStatus (state, payload) {
@@ -38,6 +38,8 @@ const mutations = {
     } else {
       updateStatus(payload)
     }
+
+    console.log(state)
   }
 }
 
