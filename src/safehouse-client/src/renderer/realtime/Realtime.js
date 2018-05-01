@@ -11,6 +11,7 @@ var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
   sendMessage(new Message(1, Auth.getAuthToken()))
+  sendMessage(new Message(2))
 }
 
 var handleMessage = (event) => {

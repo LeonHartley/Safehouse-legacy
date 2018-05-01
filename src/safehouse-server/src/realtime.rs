@@ -30,12 +30,7 @@ impl SafehouseRealtime {
         start_realtime(self.host, self.port)
     }
 
-    pub fn get_status(user_id: i64) -> UserStatus {
-        let clients = match REALTIME_CLIENTS.lock() {
-            Ok(clients) => clients,
-            Err(_e) => return UserStatus::Offline,
-        };
-
+    pub fn get_status(user_id: i64, clients: &HashMap<i64, Sender>) -> UserStatus {
         if clients.contains_key(&user_id) {
             UserStatus::Online
         } else {
@@ -183,7 +178,30 @@ fn handle_get_status(client: &WebSocket) {
         None => return
     };
 
-    //client.socket.send_msg(2, json::encode(&status_vec).unwrap());
+    let contacts = match client.contacts {
+        Some(ref contacts) => match contacts.lock() {
+            Ok(contacts) => contacts,
+            Err(_) => return
+        },
+
+        None => return
+    };
+
+    let mut status_vec = vec![];
+    
+    let clients = match REALTIME_CLIENTS.lock() {
+        Ok(clients) => clients,
+        Err(_e) => return
+    };
+
+    for contact in contacts.iter() {
+        status_vec.push(ContactStatus {
+            id: *contact,
+            status: SafehouseRealtime::get_status(*contact, &clients)
+        })
+    };
+
+    client.socket.send_msg(2, json::encode(&status_vec).unwrap());
 }
 
 fn start_realtime(host: &'static str, port: i16) {

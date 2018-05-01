@@ -30,7 +30,7 @@
     computed: {
       contacts () {
         var contacts = []
-        var contactsObj = this.contactsObj
+        let contactsObj = this.contactsObj
 
         Object.keys(contactsObj).forEach(function (id) {
           contacts.push(contactsObj[id])

@@ -23,10 +23,20 @@ const mutations = {
   },
 
   updateContactStatus (state, payload) {
-    state.contacts[payload.id].status = payload.status.toLowerCase()
+    var updateStatus = (contact) => {
+      state.contacts[contact.id].status = contact.status.toLowerCase()
 
-    if (state.activeContact.id === payload.id) {
-      state.activeContact.status = payload.status.toLowerCase()
+      if (state.activeContact.id === contact.id) {
+        state.activeContact.status = contact.status.toLowerCase()
+      }
+    }
+
+    if (payload instanceof Array) {
+      for (var i = 0; i < payload.length; i++) {
+        updateStatus(payload[i])
+      }
+    } else {
+      updateStatus(payload)
     }
   }
 }
