@@ -43,12 +43,7 @@ impl SafehouseRealtime {
         }
     }
 
-    pub fn send_msg(user_id: &i64, msg_type: u16, payload: String) {
-        let clients = match REALTIME_CLIENTS.lock() {
-            Ok(clients) => clients,
-            Err(e) => return
-        };
-
+    pub fn send_msg(user_id: &i64, msg_type: u16, payload: String, clients: &HashMap<i64, Sender>) {
         if let Some(client) = clients.get(&user_id) {
             client.send_msg(msg_type, payload);
         }
@@ -103,11 +98,10 @@ impl Handler for WebSocket {
                 Ok(clients) => clients,
                 Err(_e) => return
             };
-            
-            clients.remove(&user_id);
-        }
 
-        self.notify_status(UserStatus::Offline);
+            clients.remove(&user_id);
+            self.notify_status(UserStatus::Offline, &clients);
+        }
 
         println!("WebSocket closing for ({:?}) {}", code, reason);
     }
@@ -130,7 +124,7 @@ impl SendMessage for Sender {
 }
 
 impl WebSocket {
-    fn notify_status(&self, status: UserStatus) {
+    fn notify_status(&self, status: UserStatus, clients: &HashMap<i64, Sender>) {
         let contacts = match self.contacts {
             Some(ref contacts) => match contacts.lock() {
                 Ok(contacts) => contacts,
@@ -151,7 +145,7 @@ impl WebSocket {
         }).unwrap();
 
         for c in contacts.iter() {
-            SafehouseRealtime::send_msg(c, 2, msg.clone());
+            SafehouseRealtime::send_msg(c, 2, msg.clone(), &clients);
         };
     }
 }
@@ -179,10 +173,8 @@ fn handle_authentication(client: &mut WebSocket, token: String) {
 
     if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
         clients.insert(user_id, client.socket.clone());
+        client.notify_status(UserStatus::Online, &clients);
     };
-
-    client.notify_status(UserStatus::Online);
-
 }
 
 fn handle_get_status(client: &WebSocket) {
