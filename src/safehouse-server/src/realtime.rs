@@ -6,11 +6,13 @@ use ws::{listen, Result, Sender, Message, CloseCode, Handler};
 use bytebuffer::{ByteBuffer};
 use auth::verify_token;
 use database::{DatabaseCtx, UserRepo};
-use models::{UserStatus, ContactStatus, ChatMessage};
+use models::{UserStatus, ContactStatus, ChatMessage, RealtimeAuthRequest};
 use rustc_serialize::{json};
 
+type RealtimeClientStore = HashMap<i64, (String, Sender)>;
+
 lazy_static! {
-    static ref REALTIME_CLIENTS: Mutex<HashMap<i64, Sender>> = Mutex::new(HashMap::new());
+    static ref REALTIME_CLIENTS: Mutex<RealtimeClientStore> = Mutex::new(RealtimeClientStore::new());
 }
 
 pub struct SafehouseRealtime {
@@ -30,7 +32,7 @@ impl SafehouseRealtime {
         start_realtime(self.host, self.port)
     }
 
-    pub fn get_status(user_id: i64, clients: &HashMap<i64, Sender>) -> UserStatus {
+    pub fn get_status(user_id: i64, clients: &RealtimeClientStore) -> UserStatus {
         if clients.contains_key(&user_id) {
             UserStatus::Online
         } else {
@@ -38,9 +40,16 @@ impl SafehouseRealtime {
         }
     }
 
-    pub fn send_msg(user_id: &i64, msg_type: u16, payload: String, clients: &HashMap<i64, Sender>) {
+    pub fn get_key(user_id: i64, clients: &RealtimeClientStore) -> Option<String> {
+        match clients.get(&user_id) {
+            Some(client) => Some(client.0.clone()),
+            None => None
+        } 
+    }
+
+    pub fn send_msg(user_id: &i64, msg_type: u16, payload: String, clients: &RealtimeClientStore) {
         if let Some(client) = clients.get(&user_id) {
-            client.send_msg(msg_type, payload);
+            client.1.send_msg(msg_type, payload);
         }
     }
 }
@@ -52,7 +61,7 @@ struct WebSocket {
 }
 
 pub enum RealtimeEvent {
-    Authenticate(String),
+    Authenticate(RealtimeAuthRequest),
     GetStatus(),
     SendMessage(ChatMessage),
     Unknown()
@@ -64,12 +73,12 @@ impl RealtimeEvent {
         
         let id = buffer.read_u16();
         let payload_len = buffer.read_u16() as usize;
-        let payload = buffer.read_bytes(payload_len);
+        let payload_str = String::from_utf8(buffer.read_bytes(payload_len)).unwrap();
 
         match id {
-            1 => RealtimeEvent::Authenticate(String::from_utf8(payload).unwrap()),
+            1 => RealtimeEvent::Authenticate(json::decode(&payload_str).unwrap()),
             2 => RealtimeEvent::GetStatus(),
-            3 => RealtimeEvent::SendMessage(json::decode(&String::from_utf8(payload).unwrap()).unwrap()),
+            3 => RealtimeEvent::SendMessage(json::decode(&payload_str).unwrap()),
             _ => RealtimeEvent::Unknown()
         }
     }
@@ -78,7 +87,7 @@ impl RealtimeEvent {
 impl Handler for WebSocket {
     fn on_message(&mut self, msg: Message) -> Result<()> {
         match RealtimeEvent::parse(&self, msg.into_data()) {
-            RealtimeEvent::Authenticate(token) => handle_authentication(self, token),
+            RealtimeEvent::Authenticate(req) => handle_authentication(self, req),
             RealtimeEvent::GetStatus() => handle_get_status(self),
             RealtimeEvent::SendMessage(message) => handle_send_message(self, message),
 
@@ -98,7 +107,12 @@ impl Handler for WebSocket {
             };
 
             clients.remove(&user_id);
-            self.notify_status(UserStatus::Offline, &clients);
+
+            self.notify_status(ContactStatus {
+                id: user_id,
+                status: UserStatus::Offline,
+                key: None
+            }, &clients);
         }
 
         println!("WebSocket closing for ({:?}) {}", code, reason);
@@ -122,13 +136,10 @@ impl SendMessage for Sender {
 }
 
 impl WebSocket {
-    fn notify_status(&self, status: UserStatus, clients: &HashMap<i64, Sender>) {
+    fn notify_status(&self, status: ContactStatus, clients: &RealtimeClientStore) {
         if let Some(user_id) = self.user_id {
             if let Ok(contacts) = self.contacts.as_ref().unwrap().lock() {
-                let msg = json::encode(&ContactStatus {
-                    id: user_id,
-                    status
-                }).unwrap();
+                let msg = json::encode(&status).unwrap();
 
                 for c in contacts.iter() {
                     SafehouseRealtime::send_msg(c, 2, msg.clone(), &clients);
@@ -151,8 +162,8 @@ impl WebSocket {
     }
 }
 
-fn handle_authentication(client: &mut WebSocket, token: String) {
-    if let Ok(user_id) = verify_token(&token) {
+fn handle_authentication(client: &mut WebSocket, req: RealtimeAuthRequest) {
+    if let Ok(user_id) = verify_token(&req.token) {
         let contact_data = match DatabaseCtx::find_user_contacts(user_id) {
             Ok(contact_data) => contact_data,
             Err(_) => return
@@ -168,8 +179,13 @@ fn handle_authentication(client: &mut WebSocket, token: String) {
         client.contacts = Some(Mutex::new(contacts));
 
         if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
-            clients.insert(user_id, client.socket.clone());
-            client.notify_status(UserStatus::Online, &clients);
+            clients.insert(user_id, (req.key.clone(), client.socket.clone()));
+            
+            client.notify_status(ContactStatus {
+                id: user_id, 
+                status: UserStatus::Online,
+                key: Some(req.key).clone()
+            }, &clients);
         }
     }
 }
@@ -187,7 +203,8 @@ fn handle_get_status(client: &WebSocket) {
             for contact in contacts.iter() {
                 status_vec.push(ContactStatus {
                     id: *contact,
-                    status: SafehouseRealtime::get_status(*contact, &clients)
+                    status: SafehouseRealtime::get_status(*contact, &clients),
+                    key: None
                 })
             };
 

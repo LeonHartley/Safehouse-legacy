@@ -13,6 +13,12 @@ pub struct AuthorisationResponse {
     pub data: UserAccount
 }
 
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct RealtimeAuthRequest {
+    pub token: String,
+    pub key: String
+}
+
 #[derive(RustcDecodable, RustcEncodable, Clone, Debug)]
 pub struct UserAccount {
     pub id: i64,
@@ -26,7 +32,8 @@ pub struct UserAccount {
 #[derive(RustcDecodable, RustcEncodable, Debug)]
 pub struct ContactStatus {
     pub id: i64,
-    pub status: UserStatus
+    pub status: UserStatus,
+    pub key: Option<String>
 }
 
 #[derive(RustcDecodable, RustcEncodable, Debug)]
@@ -61,6 +68,10 @@ impl ToJson for ContactStatus {
 
         map.insert("id".to_string(), self.id.to_json());
         map.insert("status".to_string(), self.status.to_json());
+
+        if let Some(ref key) = self.key {
+            map.insert("key".to_string(), key.to_json());
+        }
 
         Json::Object(map)
     }
