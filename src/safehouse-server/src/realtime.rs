@@ -198,12 +198,9 @@ fn handle_get_status(client: &WebSocket) {
 
 fn handle_send_message(client: &WebSocket, message: ChatMessage) {
     if client.is_contact(message.user_id) {
-        let clients = match REALTIME_CLIENTS.lock() {
-            Ok(clients) => clients,
-            Err(_e) => return
-        };
-
-        SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
+        if let Ok(clients) = REALTIME_CLIENTS.lock() {
+            SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
+        }
     }
 }
 
