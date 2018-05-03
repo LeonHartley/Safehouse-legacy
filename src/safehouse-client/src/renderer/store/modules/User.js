@@ -3,6 +3,12 @@ const state = {
   activeContact: null
 }
 
+const getters = {
+  publicKeyForUser (userId) {
+    return 0
+  }
+}
+
 const mutations = {
   setContacts (state, payload) {
     state.contacts = {}
@@ -41,9 +47,13 @@ const mutations = {
 
     console.log(state)
   }
+  // updateContactPublicKey (state, payload) {
+  //   state[payload.id].key = payload.
+  // }
 }
 
 export default {
   state,
-  mutations
+  mutations,
+  getters
 }

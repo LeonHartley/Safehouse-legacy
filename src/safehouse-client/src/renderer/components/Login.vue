@@ -22,6 +22,7 @@
   import Realtime from '../realtime/Realtime'
   import ApiClient from '../api/Client'
   import Auth from '../api/auth/Auth'
+
   var ipc = require('electron').ipcRenderer
 
   function onLogin (router, store) {
@@ -55,10 +56,6 @@
     },
 
     data () {
-      // if (Auth.isAuthenticated) {
-      //   onLogin(this.$router)
-      // }
-
       return { username: '', password: '' }
     },
 

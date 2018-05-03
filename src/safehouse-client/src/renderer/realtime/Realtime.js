@@ -1,6 +1,7 @@
 import Auth from '../api/auth/Auth'
 import Message from './Message'
 import Store from '../store'
+import keypair from 'keypair'
 
 var connection = {
   socket: null,
@@ -12,8 +13,6 @@ var handlers = {
     Store.commit('updateContactStatus', JSON.parse(msg.payload))
   },
   '3': (msg) => {
-    console.log(msg)
-
     Store.commit('newChatMessage', JSON.parse(msg.payload))
   }
 }
@@ -21,7 +20,13 @@ var handlers = {
 var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
-  sendMessage(new Message(1, Auth.getAuthToken()))
+  var keys = keypair()
+
+  sendMessage(new Message(1, JSON.stringify({
+    token: Auth.getAuthToken(),
+    key: keys.public
+  })))
+
   sendMessage(new Message(2))
 }
 

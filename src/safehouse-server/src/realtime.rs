@@ -75,6 +75,8 @@ impl RealtimeEvent {
         let payload_len = buffer.read_u16() as usize;
         let payload_str = String::from_utf8(buffer.read_bytes(payload_len)).unwrap();
 
+        println!("data: {}", payload_str);
+
         match id {
             1 => RealtimeEvent::Authenticate(json::decode(&payload_str).unwrap()),
             2 => RealtimeEvent::GetStatus(),
@@ -204,7 +206,7 @@ fn handle_get_status(client: &WebSocket) {
                 status_vec.push(ContactStatus {
                     id: *contact,
                     status: SafehouseRealtime::get_status(*contact, &clients),
-                    key: None
+                    key: SafehouseRealtime::get_key(*contact, &clients)
                 })
             };
 
@@ -228,6 +230,6 @@ fn start_realtime(host: &'static str, port: i16) {
         listen(format!("{}:{}", host, port), |out| {
             println!("ws connected");
             WebSocket { socket: out, user_id: None, contacts: None }
-        });
+        }).unwrap();
     });
 }

@@ -10,7 +10,7 @@
       
       <span class="contact-name">{{ activeContact.username }}</span>
     </div>
-    <div class="main-chat">
+    <div class="main-chat" v-chat-scroll="{always: false}">
       <div class="messages">
         <ul v-if="activeChat.messages.length > 0">
           <li v-for="(message, index) in activeChat.messages" :key="index" >
@@ -100,10 +100,14 @@
     margin: auto;
   }
 
+  .main-chat {
+    overflow-y: scroll;
+  }
+
   .messages ul {
     list-style: none;
     width: 100%;
-    padding: 0;
+    padding: 0 0 80px 0;
   }
 
   .messages li {
