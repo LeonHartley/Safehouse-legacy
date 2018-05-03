@@ -140,8 +140,6 @@ impl WebSocket {
 
 fn handle_authentication(client: &mut WebSocket, token: String) {
     if let Ok(user_id) = verify_token(&token) {
-        client.user_id = Some(user_id);
-
         let contact_data = match DatabaseCtx::find_user_contacts(user_id) {
             Ok(contact_data) => contact_data,
             Err(_) => return
@@ -153,6 +151,7 @@ fn handle_authentication(client: &mut WebSocket, token: String) {
             contacts.push(contact.id);
         }
 
+        client.user_id = Some(user_id);
         client.contacts = Some(Mutex::new(contacts));
 
         if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
