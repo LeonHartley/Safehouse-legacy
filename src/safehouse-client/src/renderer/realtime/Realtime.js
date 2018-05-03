@@ -1,11 +1,12 @@
 import Auth from '../api/auth/Auth'
 import Message from './Message'
 import Store from '../store'
-import keypair from 'keypair'
+import cryptico from 'cryptico'
 
 var connection = {
   socket: null,
-  server: null
+  server: null,
+  key: {}
 }
 
 var handlers = {
@@ -13,18 +14,23 @@ var handlers = {
     Store.commit('updateContactStatus', JSON.parse(msg.payload))
   },
   '3': (msg) => {
-    Store.commit('newChatMessage', JSON.parse(msg.payload))
+    var payload = JSON.parse(msg.payload)
+
+    payload.message = cryptico.decrypt(payload.message, connection.key).plaintext
+
+    Store.commit('newChatMessage', payload)
   }
 }
 
 var connectionReady = (event) => {
   console.log('Safehouse-Realtime - Ready for messages')
 
-  var keys = keypair()
+  let token = Auth.getAuthToken()
+  connection.key = cryptico.generateRSAKey(token, 1024)
 
   sendMessage(new Message(1, JSON.stringify({
-    token: Auth.getAuthToken(),
-    key: keys.public
+    token: token,
+    key: cryptico.publicKeyString(connection.key)
   })))
 
   sendMessage(new Message(2))
@@ -44,6 +50,15 @@ var sendMessage = (message) => {
     // todo: expandable buffer..
     connection.socket.send(message.encode(new ArrayBuffer(1024)))
   }
+}
+
+var sendChatMessage = (message) => {
+  message.message = cryptico.encrypt(
+    message.message,
+    Store.getters.publicKeyForContact(message.user_id)
+  ).cipher
+
+  sendMessage(new Message(3, JSON.stringify(message)))
 }
 
 var disconnect = () => {
@@ -72,6 +87,7 @@ export default {
     }
   },
 
+  sendChatMessage: sendChatMessage,
   send: sendMessage,
 
   disconnect: disconnect,

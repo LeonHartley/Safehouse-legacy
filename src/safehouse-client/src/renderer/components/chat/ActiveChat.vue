@@ -51,15 +51,15 @@
           return
         }
 
-        var msg = {
+        let msg = {
           local: true,
           sender: Auth.userId(),
           user_id: this.activeContact.id,
           message: this.currentMessage
         }
 
-        Realtime.send(new Realtime.Message(3, JSON.stringify(msg)))
         this.$store.commit('newChatMessage', msg)
+        Realtime.sendChatMessage(msg)
 
         this.currentMessage = ''
       }

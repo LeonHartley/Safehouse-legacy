@@ -4,8 +4,8 @@ const state = {
 }
 
 const getters = {
-  publicKeyForUser (userId) {
-    return 0
+  publicKeyForContact: (state) => (id) => {
+    return state.contacts[id].key
   }
 }
 
@@ -31,6 +31,7 @@ const mutations = {
   updateContactStatus (state, payload) {
     var updateStatus = (contact) => {
       state.contacts[contact.id].status = contact.status.toLowerCase()
+      state.contacts[contact.id].key = contact.key
 
       if (state.activeContact !== null && state.activeContact.id === contact.id) {
         state.activeContact.status = contact.status.toLowerCase()
