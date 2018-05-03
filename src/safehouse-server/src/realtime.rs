@@ -136,6 +136,19 @@ impl WebSocket {
             }
         }
     }
+
+    fn is_contact(&self, user_id: i64) -> bool {
+        match(self.contacts) {
+            Some(ref contacts) => match contacts.lock() {
+                Ok(contacts) => {
+                    contacts.contains(&user_id)
+                }, 
+                Err(_e) => false
+            },
+
+            None => false
+        }
+    }
 }
 
 fn handle_authentication(client: &mut WebSocket, token: String) {
@@ -184,18 +197,13 @@ fn handle_get_status(client: &WebSocket) {
 }
 
 fn handle_send_message(client: &WebSocket, message: ChatMessage) {
-    if let Some(user_id) = client.user_id {
-        if let Ok(contacts) = client.contacts.as_ref().unwrap().lock() {
-            let clients = match REALTIME_CLIENTS.lock() {
-                Ok(clients) => clients,
-                Err(_e) => return
-            };
+    if client.is_contact(message.user_id) {
+        let clients = match REALTIME_CLIENTS.lock() {
+            Ok(clients) => clients,
+            Err(_e) => return
+        };
 
-            if contacts.contains(&message.user_id) {
-                println!("Message sent: {:?}", message);
-                SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
-            }
-        }
+        SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
     }
 }
 
