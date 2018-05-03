@@ -123,88 +123,65 @@ impl SendMessage for Sender {
 
 impl WebSocket {
     fn notify_status(&self, status: UserStatus, clients: &HashMap<i64, Sender>) {
-        let contacts = match self.contacts {
-            Some(ref contacts) => match contacts.lock() {
-                Ok(contacts) => contacts,
-                Err(_) => return
-            },
+        if let Some(user_id) = self.user_id {
+            if let Ok(contacts) = self.contacts.as_ref().unwrap().lock() {
+                let msg = json::encode(&ContactStatus {
+                    id: user_id,
+                    status
+                }).unwrap();
 
-            None => return
-        };
-
-        let user_id = match self.user_id {
-            Some(user_id) => user_id,
-            None => return
-        };
-
-        let msg = json::encode(&ContactStatus {
-            id: user_id,
-            status
-        }).unwrap();
-
-        for c in contacts.iter() {
-            SafehouseRealtime::send_msg(c, 2, msg.clone(), &clients);
-        };
+                for c in contacts.iter() {
+                    SafehouseRealtime::send_msg(c, 2, msg.clone(), &clients);
+                };
+            }
+        }
     }
 }
 
 fn handle_authentication(client: &mut WebSocket, token: String) {
-    let user_id = match verify_token(&token) {
-        Ok(user_id) => user_id,
-        Err(_) => return
-    };
+    if let Ok(user_id) = verify_token(&token) {
+        client.user_id = Some(user_id);
 
-    client.user_id = Some(user_id);
+        let contact_data = match DatabaseCtx::find_user_contacts(user_id) {
+            Ok(contact_data) => contact_data,
+            Err(_) => return
+        };
 
-    let contact_data = match DatabaseCtx::find_user_contacts(user_id) {
-        Ok(contact_data) => contact_data,
-        Err(_) => return
-    };
+        let mut contacts = Vec::new();
 
-    let mut contacts = Vec::new();
+        for contact in contact_data {
+            contacts.push(contact.id);
+        }
 
-    for contact in contact_data {
-        contacts.push(contact.id);
+        client.contacts = Some(Mutex::new(contacts));
+
+        if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
+            clients.insert(user_id, client.socket.clone());
+            client.notify_status(UserStatus::Online, &clients);
+        }
     }
-
-    client.contacts = Some(Mutex::new(contacts));
-
-    if let Ok(mut clients) = REALTIME_CLIENTS.lock() {
-        clients.insert(user_id, client.socket.clone());
-        client.notify_status(UserStatus::Online, &clients);
-    };
 }
 
 fn handle_get_status(client: &WebSocket) {
-    let user_id = match client.user_id {
-        Some(user_id) => user_id,
-        None => return
-    };
+    if let Some(user_id) = client.user_id {
+        if let Ok(contacts) = client.contacts.as_ref().unwrap().lock() {
+            let clients = match REALTIME_CLIENTS.lock() {
+                Ok(clients) => clients,
+                Err(_e) => return
+            };
 
-    let contacts = match client.contacts {
-        Some(ref contacts) => match contacts.lock() {
-            Ok(contacts) => contacts,
-            Err(_) => return
-        },
+            let mut status_vec = vec![];
+            
+            for contact in contacts.iter() {
+                status_vec.push(ContactStatus {
+                    id: *contact,
+                    status: SafehouseRealtime::get_status(*contact, &clients)
+                })
+            };
 
-        None => return
-    };
-
-    let mut status_vec = vec![];
-    
-    let clients = match REALTIME_CLIENTS.lock() {
-        Ok(clients) => clients,
-        Err(_e) => return
-    };
-
-    for contact in contacts.iter() {
-        status_vec.push(ContactStatus {
-            id: *contact,
-            status: SafehouseRealtime::get_status(*contact, &clients)
-        })
-    };
-
-    client.socket.send_msg(2, json::encode(&status_vec).unwrap());
+            client.socket.send_msg(2, json::encode(&status_vec).unwrap());
+        }
+    }
 }
 
 fn handle_send_message(client: &WebSocket, message: ChatMessage) {
