@@ -208,28 +208,18 @@ fn handle_get_status(client: &WebSocket) {
 }
 
 fn handle_send_message(client: &WebSocket, message: ChatMessage) {
-    let user_id = match client.user_id {
-        Some(user_id) => user_id,
-        None => return
-    };
+    if let Some(user_id) = client.user_id {
+        if let Ok(contacts) = client.contacts.as_ref().unwrap().lock() {
+            let clients = match REALTIME_CLIENTS.lock() {
+                Ok(clients) => clients,
+                Err(_e) => return
+            };
 
-    let contacts = match client.contacts {
-        Some(ref contacts) => match contacts.lock() {
-            Ok(contacts) => contacts,
-            Err(_) => return
-        },
-
-        None => return
-    };
-
-    let clients = match REALTIME_CLIENTS.lock() {
-        Ok(clients) => clients,
-        Err(_e) => return
-    };
-
-    if contacts.contains(&message.user_id) {
-        println!("Message sent: {:?}", message);
-        SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
+            if contacts.contains(&message.user_id) {
+                println!("Message sent: {:?}", message);
+                SafehouseRealtime::send_msg(&message.user_id, 3, json::encode(&message).unwrap(), &clients)
+            }
+        }
     }
 }
 

@@ -7,10 +7,15 @@ authors = ["Leon Hartley <dev@leonh.net>"]
 ws = "0.7.6"
 nickel = "0.10.1"
 rustc-serialize = "0.3"
-hyper = "0.10"
-mysql = "*"
 lazy_static = "*"
 jwt = "*"
 rust-crypto = "0.2.36"
 byteorder = "1.2.2"
 bytebuffer = "0.2.0"
+
+[dependencies.mysql]
+version = "*"
+
+[dependencies.hyper]
+version = "0.10"
+default-features = false
