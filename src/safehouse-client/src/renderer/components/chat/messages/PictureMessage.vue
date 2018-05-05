@@ -2,7 +2,7 @@
   <div class='picture-msg'>
     <b-btn v-b-modal.drawMsg><i class='far fa-edit'></i></b-btn>
     
-    <b-modal width='350px' id='drawMsg' title='Draw Message' cancel-hidden='true' ok-hidden='true'>
+    <b-modal width='350px' ref="drawMsg" id='drawMsg' title='Draw Message' cancel-hidden='true' ok-hidden='true'>
       <canvas id='drawing-canvas' height='420px' width='420px'></canvas>
 
       <template slot="modal-footer">
@@ -35,6 +35,7 @@
           }
         }
 
+        this.$refs.drawMsg.hide()
         this.$store.commit('newChatMessage', msg)
         Realtime.sendChatMessage(msg)
       }
@@ -55,8 +56,11 @@
 
       canvas = document.getElementById('drawing-canvas')
       ctx = canvas.getContext('2d')
+      ctx.fillStyle = 'white'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       canvas.addEventListener('mousemove', function (e) {
+        console.log(e)
         findxy('move', e)
       }, false)
 
@@ -70,6 +74,19 @@
 
       canvas.addEventListener('mouseout', function (e) {
         findxy('out', e)
+      }, false)
+
+      canvas.addEventListener('touchmove', function (e) {
+        console.log(e)
+        findxy('move', e.touches[0])
+      }, false)
+
+      canvas.addEventListener('touchstart', function (e) {
+        findxy('down', e.touches[0])
+      }, false)
+
+      canvas.addEventListener('touchend', function (e) {
+        findxy('up', e.touches[0])
       }, false)
 
       function draw () {
