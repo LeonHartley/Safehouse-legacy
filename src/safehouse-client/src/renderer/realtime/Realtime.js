@@ -16,7 +16,7 @@ var handlers = {
   '3': (msg) => {
     var payload = JSON.parse(msg.payload)
 
-    payload.message = cryptico.decrypt(payload.message, connection.key).plaintext
+    payload.message = JSON.parse(cryptico.decrypt(payload.message, connection.key).plaintext)
 
     Store.commit('newChatMessage', payload)
   }
@@ -54,7 +54,7 @@ var sendMessage = (message) => {
 
 var sendChatMessage = (message) => {
   message.message = cryptico.encrypt(
-    message.message,
+    JSON.stringify(message.message),
     Store.getters.publicKeyForContact(message.user_id)
   ).cipher
 

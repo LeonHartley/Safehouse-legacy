@@ -4,6 +4,7 @@
             <contacts-bar></contacts-bar>
         </div>
 
+        <user-controller></user-controller>
         <active-chat></active-chat>
     </div>
 </template>
@@ -11,13 +12,15 @@
 <script>
   import ActiveChat from './chat/ActiveChat.vue'
   import ContactsBar from './contacts/ContactsBar.vue'
+  import UserController from './user/UserController.vue'
 
   export default {
     name: 'chat',
 
     components: {
       ActiveChat,
-      ContactsBar
+      ContactsBar,
+      UserController
     }
   }
 </script>

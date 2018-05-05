@@ -1,6 +1,7 @@
 const state = {
   contacts: {},
-  activeContact: null
+  activeContact: null,
+  data: null
 }
 
 const getters = {
@@ -45,12 +46,11 @@ const mutations = {
     } else {
       updateStatus(payload)
     }
+  },
 
-    console.log(state)
+  updateUserData (state, payload) {
+    state.data = payload
   }
-  // updateContactPublicKey (state, payload) {
-  //   state[payload.id].key = payload.
-  // }
 }
 
 export default {

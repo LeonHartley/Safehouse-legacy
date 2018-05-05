@@ -14,11 +14,19 @@
       <div class="messages">
         <ul v-if="activeChat.messages.length > 0">
           <li v-for="(message, index) in activeChat.messages" :key="index" >
-          <div :class="{
-            'chat-message': true,
-            'sent': message.local
-          }">{{message.txt}}</div>
-          <div class="clear"></div>
+            <div v-if="message.type == 'img'">
+              <div v-html="message.txt" :class="{
+                'chat-message': true,
+                'sent': message.local
+              }"></div>
+            </div>
+            <div v-else>
+              <div :class="{
+                'chat-message': true,
+                'sent': message.local
+              }">{{message.txt}}</div>
+            </div>
+            <div class="clear"></div>
           </li>
         </ul>
       </div>
@@ -27,6 +35,7 @@
         <form>
           <textarea v-model="currentMessage" v-on:keyup.enter="sendMessage" class="form-control"></textarea>
         </form>
+        <picture-message></picture-message>
       </div>
     </div>
   </div>
@@ -40,6 +49,7 @@
 
   import Realtime from '../../realtime/Realtime'
   import Auth from '../../api/auth/Auth'
+  import PictureMessage from './messages/PictureMessage.vue'
 
   export default {
     name: 'active-chat',
@@ -55,7 +65,10 @@
           local: true,
           sender: Auth.userId(),
           user_id: this.activeContact.id,
-          message: this.currentMessage
+          message: {
+            type: 'txt',
+            msg: this.currentMessage
+          }
         }
 
         this.$store.commit('newChatMessage', msg)
@@ -78,6 +91,10 @@
         chats: (state) => state.Chat.chats,
         activeContact: state => state.User.activeContact
       })
+    },
+
+    components: {
+      PictureMessage
     }
   }
 </script>
@@ -95,9 +112,10 @@
   }
 
   .message-box textarea {
-    width: 95%;
+    width: calc(99% - 75px);
     display: block;
-    margin: auto;
+    float: left;
+    margin-left: 10px;
   }
 
   .main-chat {

@@ -18,7 +18,8 @@ const mutations = {
     var msg = {
       local: local,
       from: id,
-      txt: payload.message
+      type: payload.message.type,
+      txt: payload.message.type === 'img' ? '<img src="' + payload.message.msg + '" heigth="420px" width="420px" />' : payload.message.msg
     }
 
     state.chats[id].messages.push(msg)

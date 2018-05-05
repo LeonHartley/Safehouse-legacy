@@ -46,6 +46,7 @@
         event.preventDefault()
 
         ApiClient.auth.authorise(this.username, this.password).then((res) => {
+          this.$store.commit('updateUserData', res.data.data)
           Auth.setAuthentication(res.data.token)
 
           onLogin(this.$router, this.$store)
