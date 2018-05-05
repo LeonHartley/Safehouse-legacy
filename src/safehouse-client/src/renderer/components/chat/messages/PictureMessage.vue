@@ -18,6 +18,14 @@
   import Auth from '../../../api/auth/Auth'
   import Realtime from '../../../realtime/Realtime'
 
+  function clearCanvas () {
+    var canvas = document.getElementById('drawing-canvas')
+    var ctx = canvas.getContext('2d')
+
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
+
   export default {
     name: 'picture-message',
 
@@ -34,6 +42,8 @@
             msg: canvas.toDataURL()
           }
         }
+
+        clearCanvas()
 
         this.$refs.drawMsg.hide()
         this.$store.commit('newChatMessage', msg)
@@ -56,8 +66,8 @@
 
       canvas = document.getElementById('drawing-canvas')
       ctx = canvas.getContext('2d')
-      ctx.fillStyle = 'white'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      clearCanvas()
 
       canvas.addEventListener('mousemove', function (e) {
         console.log(e)

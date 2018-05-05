@@ -116,6 +116,7 @@
     display: block;
     float: left;
     margin-left: 10px;
+    resize: none;
   }
 
   .main-chat {
