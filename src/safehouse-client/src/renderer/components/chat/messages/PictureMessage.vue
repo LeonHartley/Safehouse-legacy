@@ -4,6 +4,8 @@
     
     <b-modal width='350px' ref="drawMsg" id='drawMsg' title='Draw Message' cancel-hidden='true' ok-hidden='true'>
       <canvas id='drawing-canvas' height='420px' width='420px'></canvas>
+      <p><small>You can use the eraser by holding right click!</small></p>
+
 
       <template slot="modal-footer">
         <button class="btn btn-primary" v-on:click="sendPicture">Send Picture</button>
@@ -61,8 +63,8 @@
       var currY = 0
       var dotFlat = false
 
-      var x = 'black'
-      var y = 2
+      var pointColour = 'black'
+      var pointWidth = 2
 
       canvas = document.getElementById('drawing-canvas')
       ctx = canvas.getContext('2d')
@@ -70,7 +72,6 @@
       clearCanvas()
 
       canvas.addEventListener('mousemove', function (e) {
-        console.log(e)
         findxy('move', e)
       }, false)
 
@@ -87,7 +88,6 @@
       }, false)
 
       canvas.addEventListener('touchmove', function (e) {
-        console.log(e)
         findxy('move', e.touches[0])
       }, false)
 
@@ -99,12 +99,12 @@
         findxy('up', e.touches[0])
       }, false)
 
-      function draw () {
+      function draw (e) {
         ctx.beginPath()
         ctx.moveTo(prevX, prevY)
         ctx.lineTo(currX, currY)
-        ctx.strokeStyle = x
-        ctx.lineWidth = y
+        ctx.strokeStyle = e.which === 3 ? 'white' : pointColour
+        ctx.lineWidth = e.which === 3 ? 30 : pointWidth
         ctx.stroke()
         ctx.closePath()
       }
@@ -118,10 +118,11 @@
 
           flag = true
           dotFlat = true
+
           if (dotFlat) {
             ctx.beginPath()
-            ctx.fillStyle = x
-            ctx.fillRect(currX, currY, 2, 2)
+            ctx.fillStyle = e.which === 3 ? 'white' : pointColour
+            ctx.fillRect(currX, currY, e.which === 3 ? 7 : 2, e.which === 3 ? 7 : 2)
             ctx.closePath()
             dotFlat = false
           }
@@ -137,7 +138,7 @@
             prevY = currY
             currX = e.clientX - canvas.getBoundingClientRect().left
             currY = e.clientY - canvas.getBoundingClientRect().top
-            draw()
+            draw(e)
           }
         }
       }
@@ -166,5 +167,9 @@
     display: inline;
     border: 2px solid #f1f1f1;
     border-radius: 3px;
+  }
+
+  canvas:hover {
+    cursor: crosshair;
   }
 </style>
